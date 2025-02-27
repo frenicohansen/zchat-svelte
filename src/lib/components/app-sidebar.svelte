@@ -1,3 +1,9 @@
+<script lang='ts' module>
+  import { authClient } from '$lib/auth-client'
+
+  const { data: session } = await authClient.getSession()
+</script>
+
 <script lang='ts'>
   import type { ComponentProps } from 'svelte'
   import { goto } from '$app/navigation'
@@ -13,7 +19,7 @@
   import { Query } from 'zero-svelte'
 
   type Conversations = {
-    id: number | null
+    id: string | null
     title: string
   }
 
@@ -22,7 +28,7 @@
   }
 
   let { conversations, ref = $bindable(null), ...restProps }: AppSidebarProps = $props()
-  const conversationId = $derived(Number(page.url.hash.slice(1)))
+  const conversationId = $derived(page.url.hash.slice(1))
   const allMessagesInConversation = $derived(new Query(z.current.query.messages.where('conversationId', conversationId)))
 
   let showDeleteDialog = $state(false)
@@ -36,6 +42,17 @@
     })
     showDeleteDialog = false
     goto('/')
+  }
+
+  async function handleSignOut() {
+    await authClient.signOut({
+      fetchOptions: {
+        onSuccess: () => {
+          z.current.close()
+          goto('/login') // redirect to login page
+        },
+      },
+    })
   }
 </script>
 
@@ -120,9 +137,11 @@
             {#snippet child({ props })}
               <Sidebar.MenuButton {...props}>
                 <Avatar.Root class='mr-2 h-6 w-6'>
-                  <Avatar.Fallback>JD</Avatar.Fallback>
+                  <Avatar.Fallback>
+                    {session?.user.name.split(' ').map(n => n[0].toUpperCase()).join('')}
+                  </Avatar.Fallback>
                 </Avatar.Root>
-                <span>John Doe</span>
+                <span>{session?.user.name}</span>
                 <ChevronDown class='ml-auto h-4 w-4' />
               </Sidebar.MenuButton>
             {/snippet}
@@ -137,7 +156,7 @@
               <span>Settings</span>
             </DropdownMenu.Item>
             <DropdownMenu.Separator />
-            <DropdownMenu.Item>
+            <DropdownMenu.Item onSelect={handleSignOut}>
               <LogOut class='mr-2 h-4 w-4' />
               <span>Log out</span>
             </DropdownMenu.Item>

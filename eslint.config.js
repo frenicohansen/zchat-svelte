@@ -7,4 +7,9 @@ export default antfu(
     svelte: true,
   },
   ...tailwind.configs['flat/recommended'],
+  {
+    rules: {
+      'antfu/no-top-level-await': 'off',
+    },
+  },
 )

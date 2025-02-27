@@ -1,5 +1,5 @@
-import type { Row } from '@rocicorp/zero'
-import { ANYONE_CAN, definePermissions } from '@rocicorp/zero'
+import type { ExpressionBuilder, Row } from '@rocicorp/zero'
+import { definePermissions } from '@rocicorp/zero'
 import { createZeroSchema } from 'drizzle-zero'
 import * as drizzleSchema from './schema'
 
@@ -11,6 +11,7 @@ export const schema = createZeroSchema(drizzleSchema, {
       id: true,
       userId: true,
       title: true,
+      accessLevel: true,
       createdAt: true,
       updatedAt: true,
     },
@@ -29,12 +30,17 @@ export const schema = createZeroSchema(drizzleSchema, {
       chunkIndex: true,
       content: true,
       createdAt: true,
-      updatedAt: true,
     },
+    user: false,
+    session: false,
+    account: false,
+    verification: false,
+    jwks: false,
   },
 })
 
 export type Schema = typeof schema
+type TableName = keyof Schema['tables']
 export type Conversations = Row<typeof schema.tables.conversations>
 export type Messages = Row<typeof schema.tables.messages>
 export type MessageChunks = Row<typeof schema.tables.messageChunks>
@@ -44,22 +50,58 @@ interface AuthData {
 }
 
 export const permissions = definePermissions<AuthData, Schema>(schema, () => {
+  const userIsLoggedIn = (
+    authData: AuthData,
+    { cmpLit }: ExpressionBuilder<Schema, TableName>,
+  ) => cmpLit(authData.sub, 'IS NOT', null)
+
+  const loggedInAndConversationOwner = (
+    authData: AuthData,
+    eb: ExpressionBuilder<Schema, 'conversations'>,
+  ) => eb.and(
+    userIsLoggedIn(authData, eb),
+    eb.cmp('userId', '=', authData.sub ?? 'null'),
+  )
+
+  const canSeeConversation = (
+    authData: AuthData,
+    eb: ExpressionBuilder<Schema, 'conversations'>,
+  ) => eb.or(
+    loggedInAndConversationOwner(authData, eb),
+    eb.cmp('accessLevel', 'public_read'),
+  )
+
+  const canSeeMessages = (
+    authData: AuthData,
+    eb: ExpressionBuilder<Schema, 'messages'>,
+  ) => eb.exists('conversation', q => q.where(eb => canSeeConversation(authData, eb)))
+
+  const canDeleteMessages = (
+    authData: AuthData,
+    eb: ExpressionBuilder<Schema, 'messages'>,
+  ) => eb.exists('conversation', q => q.where(eb => loggedInAndConversationOwner(authData, eb)))
+
+  const canSeeMessageChunks = (
+    authData: AuthData,
+    eb: ExpressionBuilder<Schema, 'messageChunks'>,
+  ) => eb.exists('message', q => q.where(eb => canSeeMessages(authData, eb)))
+
   return {
     messages: {
       row: {
-        select: ANYONE_CAN,
-        delete: ANYONE_CAN,
+        select: [canSeeMessages],
+        delete: [canDeleteMessages],
       },
     },
     messageChunks: {
       row: {
-        select: ANYONE_CAN,
+        select: [canSeeMessageChunks],
       },
     },
     conversations: {
       row: {
-        select: ANYONE_CAN,
-        delete: ANYONE_CAN,
+        select: [canSeeConversation],
+        delete: [loggedInAndConversationOwner],
       },
     },
   }

@@ -1,25 +1,22 @@
 import type { RequestHandler } from './$types'
 import { env } from '$env/dynamic/private'
 import { schema } from '$lib/db/schema'
+import { auth } from '$lib/server/auth'
+import { db } from '$lib/server/db'
 import { createOpenRouter } from '@openrouter/ai-sdk-provider'
 import { error, json } from '@sveltejs/kit'
 import { generateText, streamText } from 'ai'
 import { eq, sql } from 'drizzle-orm'
-import { drizzle } from 'drizzle-orm/node-postgres'
-import pg from 'pg'
-
-const { Pool } = pg
-const pool = new Pool({
-  connectionString: env.DATABASE_URL,
-})
-
-const db = drizzle({ client: pool, schema })
-
-const openrouter = createOpenRouter({
-  apiKey: env.OPENAI_API_KEY ?? '',
-})
 
 export const POST = (async ({ request }) => {
+  const session = await auth.api.getSession({
+    headers: request.headers,
+  })
+
+  if (!session) {
+    return error(401, 'Unauthorized')
+  }
+
   const {
     conversationId: convIdFromClient,
     message: userMessage,
@@ -29,16 +26,29 @@ export const POST = (async ({ request }) => {
     return error(400, 'Missing \'message\' in request body')
   }
 
-  let conversationId: number | undefined
+  let conversationId: string | undefined
   try {
     await db.transaction(async (tx) => {
       if (convIdFromClient) {
+        const conversation = await db.query.conversations.findFirst({
+          columns: { id: true, userId: true, accessLevel: true },
+          where: (conversation, { eq }) => eq(conversation.id, convIdFromClient),
+        })
+
+        if (!conversation) {
+          return error(404, 'Conversation not found')
+        }
+
+        if (conversation.userId !== session.user.id && conversation.accessLevel !== 'public_write') {
+          return error(403, 'User does not have permission to write to this conversation')
+        }
+
         conversationId = convIdFromClient
       }
       else {
         const convRes = await tx
           .insert(schema.conversations)
-          .values({ userId: null, title: 'Chat Session' })
+          .values({ userId: session.user.id, title: 'Chat Session' })
           .returning({ id: schema.conversations.id })
         conversationId = convRes[0].id
       }
@@ -106,6 +116,9 @@ export const POST = (async ({ request }) => {
   }
 
   const modelName = 'google/gemini-2.0-flash-lite-preview-02-05:free'
+  const openrouter = createOpenRouter({
+    apiKey: env.OPENAI_API_KEY ?? '',
+  })
   const result = streamText({
     model: openrouter(modelName),
     prompt,
