@@ -16,7 +16,7 @@ const pool = new Pool({
 const db = drizzle({ client: pool, schema })
 
 const openrouter = createOpenRouter({
-  apiKey: env.OPENROUTER_API_KEY ?? '',
+  apiKey: env.OPENAI_API_KEY ?? '',
 })
 
 export const POST = (async ({ request }) => {
