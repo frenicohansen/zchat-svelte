@@ -1,11 +1,16 @@
 <script lang='ts'>
   import type { ComponentProps } from 'svelte'
+  import { goto } from '$app/navigation'
   import { page } from '$app/state'
+  import * as AlertDialog from '$lib/components/ui/alert-dialog'
   import * as Avatar from '$lib/components/ui/avatar'
-  import * as Button from '$lib/components/ui/button'
+  import { buttonVariants } from '$lib/components/ui/button'
   import * as DropdownMenu from '$lib/components/ui/dropdown-menu'
   import * as Sidebar from '$lib/components/ui/sidebar'
+  import { cn } from '$lib/utils.js'
+  import { z } from '$lib/zero'
   import { Bot, ChevronDown, LogOut, MessageSquarePlus, Search, Settings, User, X } from 'lucide-svelte'
+  import { Query } from 'zero-svelte'
 
   type Conversations = {
     id: number | null
@@ -18,6 +23,20 @@
 
   let { conversations, ref = $bindable(null), ...restProps }: AppSidebarProps = $props()
   const conversationId = $derived(Number(page.url.hash.slice(1)))
+  const allMessagesInConversation = $derived(new Query(z.current.query.messages.where('conversationId', conversationId)))
+
+  let showDeleteDialog = $state(false)
+
+  async function handleDelete() {
+    await z.current.mutateBatch(async (tx) => {
+      allMessagesInConversation.current.forEach((message) => {
+        tx.messages.delete({ id: message.id })
+      })
+      tx.conversations.delete({ id: conversationId })
+    })
+    showDeleteDialog = false
+    goto('/')
+  }
 </script>
 
 <Sidebar.Root {...restProps} bind:ref>
@@ -25,8 +44,12 @@
     <Sidebar.Menu>
       <Sidebar.MenuItem>
         <Sidebar.MenuButton>
-          <MessageSquarePlus class='mr-2 h-4 w-4' />
-          <span>New Chat</span>
+          {#snippet child({ props })}
+            <a href='/' {...props}>
+              <MessageSquarePlus class='mr-2 h-4 w-4' />
+              <span>New Chat</span>
+            </a>
+          {/snippet}
         </Sidebar.MenuButton>
       </Sidebar.MenuItem>
     </Sidebar.Menu>
@@ -58,14 +81,27 @@
                       </a>
                     {/snippet}
                   </Sidebar.MenuButton>
-                  <Button.Root
-                    variant='ghost'
-                    size='icon'
-                    class='h-8 w-8 opacity-0 group-hover/menu-item:opacity-100'
-                  >
-                    <X class='h-4 w-4' />
-                    <span class='sr-only'>Delete</span>
-                  </Button.Root>
+                  <AlertDialog.Root bind:open={showDeleteDialog}>
+                    <AlertDialog.Trigger
+                      class={cn(buttonVariants({ variant: 'ghost', size: 'icon' }), 'h-8 w-8 opacity-0 group-hover/menu-item:opacity-100')}
+                      onclick={() => showDeleteDialog = true}
+                    >
+                      <X class='h-4 w-4' />
+                      <span class='sr-only'>Delete</span>
+                    </AlertDialog.Trigger>
+                    <AlertDialog.Content>
+                      <AlertDialog.Header>
+                        <AlertDialog.Title>Are you absolutely sure?</AlertDialog.Title>
+                        <AlertDialog.Description>
+                          This action cannot be undone.
+                        </AlertDialog.Description>
+                      </AlertDialog.Header>
+                      <AlertDialog.Footer>
+                        <AlertDialog.Cancel>Cancel</AlertDialog.Cancel>
+                        <AlertDialog.Action onclick={handleDelete}>Continue</AlertDialog.Action>
+                      </AlertDialog.Footer>
+                    </AlertDialog.Content>
+                  </AlertDialog.Root>
                 </div>
               </Sidebar.MenuItem>
             {/each}

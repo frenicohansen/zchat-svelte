@@ -1,36 +1,38 @@
 <script lang='ts' module>
   const aiModels = [
-    { value: 'gpt-4o', label: 'GPT-4o' },
+    { value: 'gemini-2.0-flash', label: 'Gemini 2.0 Flash' },
     { value: 'claude-3-5-sonnet-latest', label: 'Claude 3.5 Sonnet' },
     { value: 'deepseek-r1', label: 'DeepSeek R1' },
-  ]
-
-  const conversations = [
-    { id: '1', title: 'How to build a website', date: 'Today' },
-    { id: '2', title: 'JavaScript best practices', date: 'Today' },
-    { id: '3', title: 'React vs Next.js', date: 'Yesterday' },
-    { id: '4', title: 'CSS Grid tutorial', date: 'Yesterday' },
-    { id: '5', title: 'TypeScript interfaces', date: 'Last week' },
   ]
 </script>
 
 <script lang='ts'>
+  import { goto } from '$app/navigation'
   import { page } from '$app/state'
   import AppSidebar from '$lib/components/app-sidebar.svelte'
   import * as Select from '$lib/components/ui/select'
   import { Separator } from '$lib/components/ui/separator'
   import * as Sidebar from '$lib/components/ui/sidebar'
-
   import { z } from '$lib/zero'
+  import { onMount } from 'svelte'
   import { Query } from 'zero-svelte'
 
   import '../app.pcss'
 
   const conversationId = $derived(Number(page.url.hash.slice(1)))
-  const conversations = $derived(new Query(z.current.query.conversations.orderBy('updatedAt', 'desc')))
+  const conversations = new Query(z.current.query.conversations.orderBy('updatedAt', 'desc'))
+
+  onMount(() => {
+    // TODO still not working, currentConversation always undefined at first load
+    const currentConversation = conversations.current.find(c => c.id === conversationId)
+    if (!currentConversation) {
+      goto('/')
+    }
+  })
+
   const { children } = $props()
 
-  let value = $state('gpt-4o')
+  let value = $state('gemini-2.0-flash')
 
   const triggerContent = $derived(
     aiModels.find(model => model.value === value)?.label ?? 'Select a model',

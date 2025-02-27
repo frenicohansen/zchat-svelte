@@ -48,6 +48,7 @@ export const permissions = definePermissions<AuthData, Schema>(schema, () => {
     messages: {
       row: {
         select: ANYONE_CAN,
+        delete: ANYONE_CAN,
       },
     },
     messageChunks: {
@@ -58,6 +59,7 @@ export const permissions = definePermissions<AuthData, Schema>(schema, () => {
     conversations: {
       row: {
         select: ANYONE_CAN,
+        delete: ANYONE_CAN,
       },
     },
   }

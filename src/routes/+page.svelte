@@ -1,4 +1,5 @@
 <script lang='ts'>
+  import { goto } from '$app/navigation'
   import { page } from '$app/state'
   import * as Avatar from '$lib/components/ui/avatar'
   import Button from '$lib/components/ui/button/button.svelte'
@@ -9,9 +10,69 @@
   import { marked } from 'marked'
   import { Query } from 'zero-svelte'
 
-  const conversationId = $derived(Number(page.url.hash.slice(1)))
-  const existingMessages = $derived(new Query(z.current.query.messages.where('conversationId', '=', conversationId).orderBy('updatedAt', 'asc')))
+  const conversationId = $derived(page.url.hash.length > 1 ? Number(page.url.hash.slice(1)) : null)
+  const existingMessages = $derived(conversationId
+    ? new Query(
+      z.current.query.messages
+        .where('conversationId', conversationId)
+        .orderBy('updatedAt', 'asc'),
+    )
+    : null)
+
   let prompt = $state('')
+  let responseMessageId: number | null = $state(null)
+  let previousConversationId: number | null = $state(null)
+
+  $effect(() => {
+    if (previousConversationId !== null && previousConversationId !== conversationId) {
+      prompt = ''
+      responseMessageId = null
+    }
+    previousConversationId = conversationId
+  })
+
+  const responseMessageChunks = $derived(responseMessageId
+    ? new Query(
+      z.current.query.messageChunks
+        .where('messageId', responseMessageId)
+        .orderBy('createdAt', 'asc'),
+    )
+    : null)
+
+  const streamingMessages = $derived.by(() => {
+    if (!existingMessages)
+      return []
+
+    const messages = existingMessages.current
+    if (!messages.length || responseMessageId === -1)
+      return messages
+
+    const lastMessage = messages[messages.length - 1]
+    const isProcessingAssistantMessage
+      = lastMessage?.sender === 'assistant'
+        && !messages.find(msg => msg.id === responseMessageId)?.isFinal
+
+    if (isProcessingAssistantMessage && responseMessageChunks) {
+      const joinedChunks = responseMessageChunks.current
+        .map(chunk => chunk.content)
+        .join('')
+
+      return [
+        ...messages.slice(0, -1),
+        { ...lastMessage, finalText: joinedChunks },
+      ]
+    }
+
+    return messages
+  })
+
+  function handleTextareaKeydown(e: KeyboardEvent) {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      if (!prompt.includes('\n') || (e.metaKey || e.ctrlKey)) {
+        handleSubmit()
+      }
+    }
+  }
 
   function handleSubmit() {
     fetch('/api/chat', {
@@ -20,10 +81,17 @@
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        conversationId,
+        conversationId: conversationId || null,
         message: prompt,
       }),
     })
+      .then(response => response.json())
+      .then((body) => {
+        responseMessageId = Number(body.messageId)
+        prompt = ''
+        if (body.conversationId !== conversationId)
+          goto(`/#${body.conversationId}`)
+      })
   }
 </script>
 
@@ -32,8 +100,8 @@
 </svelte:head>
 
 <div class='flex h-full flex-col items-center scroll-smooth px-4 pt-8 gap-8'>
-  {#if existingMessages.current.length > 0}
-    {#each existingMessages.current as message (message.id)}
+  {#if existingMessages && existingMessages.current.length > 0}
+    {#each streamingMessages as message (message.id)}
       {#if message.sender === 'assistant'}
         <div class='flex justify-start w-full max-w-4xl'>
           <Avatar.Root class='mr-2 h-8 w-8'>
@@ -73,12 +141,20 @@
   <div class='sticky bottom-0 mt-3 flex w-full max-w-4xl bg-background flex-col items-center justify-end rounded-t-lg pb-4'>
     <form
       class='focus-within:border-ring/20 flex w-full flex-wrap items-end rounded-lg border px-2.5 shadow-sm transition-colors ease-in'
+      onsubmit={handleSubmit}
     >
       <textarea
-        class='bg-background placeholder:text-muted-foreground resize-none flex min-h-28 outline-none flex-grow px-3 py-4 text-base disabled:cursor-not-allowed disabled:opacity-50 md:text-sm max-h-40' placeholder='Write a message...'
+        class='bg-background placeholder:text-muted-foreground resize-none flex min-h-28 outline-none flex-grow px-3 py-4 text-base disabled:cursor-not-allowed disabled:opacity-50 md:text-sm max-h-40'
+        placeholder='Write a message...'
         bind:value={prompt}
+        onkeydown={handleTextareaKeydown}
       ></textarea>
-      <Button class='my-2.5' variant='default' size='icon' onclick={handleSubmit}>
+      <Button
+        class='my-2.5'
+        variant='default'
+        size='icon'
+        type='submit'
+      >
         <SendHorizontal class='w-4 h-4' />
       </Button>
     </form>

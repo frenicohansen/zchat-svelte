@@ -3,7 +3,7 @@ import { env } from '$env/dynamic/private'
 import { schema } from '$lib/db/schema'
 import { createOpenRouter } from '@openrouter/ai-sdk-provider'
 import { error, json } from '@sveltejs/kit'
-import { streamText } from 'ai'
+import { generateText, streamText } from 'ai'
 import { eq, sql } from 'drizzle-orm'
 import { drizzle } from 'drizzle-orm/node-postgres'
 import pg from 'pg'
@@ -20,7 +20,10 @@ const openrouter = createOpenRouter({
 })
 
 export const POST = (async ({ request }) => {
-  const { conversationId: convIdFromClient, message: userMessage } = await request.json()
+  const {
+    conversationId: convIdFromClient,
+    message: userMessage,
+  } = await request.json()
 
   if (!userMessage) {
     return error(400, 'Missing \'message\' in request body')
@@ -81,11 +84,9 @@ export const POST = (async ({ request }) => {
       ? `User: ${msg.finalText}`
       : `Assistant: ${msg.finalText}`,
   )
-  // Append a final "Assistant:" prompt so the AI knows to respond.
   promptParts.push('Assistant:')
   const prompt = promptParts.join('\n')
 
-  // Insert a new assistant message record to store the forthcoming response.
   let assistantMessageId: number
   try {
     const result = await db
@@ -104,26 +105,39 @@ export const POST = (async ({ request }) => {
     return error(500, 'Database error inserting assistant message.')
   }
 
-  let chunkIndex = 0
+  const modelName = 'google/gemini-2.0-flash-lite-preview-02-05:free'
   const result = streamText({
-    model: openrouter('google/gemini-2.0-flash-lite-preview-02-05:free'),
+    model: openrouter(modelName),
     prompt,
     onFinish: async ({ text }) => {
-      // When finished, update the assistant message with the aggregated final text.
       try {
-        await db
-          .update(schema.messages)
-          .set({ isFinal: true, finalText: text, updatedAt: sql`NOW()` })
-          .where(eq(schema.messages.id, assistantMessageId))
+        await Promise.all([
+          db
+            .update(schema.messages)
+            .set({ isFinal: true, finalText: text, updatedAt: sql`NOW()` })
+            .where(eq(schema.messages.id, assistantMessageId)),
 
-        if (!conversationId) {
-          return error(500, 'Database error updating conversation')
-        }
+          conversationId
+            ? (async () => {
+                try {
+                  const titlePrompt = `Generate a short, descriptive title (max. 3 words and plain text) for the following conversation:\n\n${prompt}`
+                  const titleResult = await generateText({
+                    model: openrouter(modelName),
+                    prompt: titlePrompt,
+                  })
+                  const generatedTitle = titleResult.text.trim()
 
-        await db
-          .update(schema.conversations)
-          .set({ updatedAt: sql`NOW()` })
-          .where(eq(schema.conversations.id, conversationId))
+                  await db
+                    .update(schema.conversations)
+                    .set({ title: generatedTitle, updatedAt: sql`NOW()` })
+                    .where(eq(schema.conversations.id, conversationId))
+                }
+                catch (err) {
+                  console.error('Error generating/updating conversation title:', err)
+                }
+              })()
+            : Promise.resolve(),
+        ])
       }
       catch (err) {
         console.error('Error updating final assistant message:', err)
@@ -133,26 +147,30 @@ export const POST = (async ({ request }) => {
       console.error('Stream error:', streamError)
       error(500, `data: Error: ${streamError instanceof Error ? streamError.message : String(streamError)}\n`)
     },
-  })
+  });
 
-  const reader = result.textStream.getReader()
-
-  while (true) {
-    const { done, value } = await reader.read()
-    const textChunk = value ?? ''
-    db.insert(schema.messageChunks)
-      .values({
-        messageId: assistantMessageId,
-        chunkIndex,
-        content: textChunk,
-      })
-      .catch(err => console.error('Error inserting message chunk:', err))
-    chunkIndex++
-
-    if (done) {
-      break
+  (async () => {
+    let chunkIndex = 0
+    const reader = result.textStream.getReader()
+    while (true) {
+      const { done, value } = await reader.read()
+      const textChunk = value ?? ''
+      await db.insert(schema.messageChunks)
+        .values({
+          messageId: assistantMessageId,
+          chunkIndex,
+          content: textChunk,
+        })
+        .catch(err => console.error('Error inserting message chunk:', err))
+      chunkIndex++
+      if (done) {
+        await db
+          .delete(schema.messageChunks)
+          .where(eq(schema.messageChunks.messageId, assistantMessageId))
+        break
+      }
     }
-  }
+  })().catch(err => console.error('Stream processing error:', err))
 
-  return json({ messageId: assistantMessageId })
+  return json({ conversationId, messageId: assistantMessageId })
 }) satisfies RequestHandler
