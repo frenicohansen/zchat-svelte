@@ -8,6 +8,7 @@
   import { Bot } from 'lucide-svelte'
   import SendHorizontal from 'lucide-svelte/icons/send-horizontal'
   import { marked } from 'marked'
+  import { onMount } from 'svelte'
   import { Query } from 'zero-svelte'
 
   const conversationId = $derived(page.url.hash.length > 1 ? Number(page.url.hash.slice(1)) : null)
@@ -19,9 +20,16 @@
     )
     : null)
 
+  let promptInput: HTMLTextAreaElement
   let prompt = $state('')
   let responseMessageId: number | null = $state(null)
   let previousConversationId: number | null = $state(null)
+
+  onMount(() => {
+    if (promptInput) {
+      promptInput.focus()
+    }
+  })
 
   $effect(() => {
     if (previousConversationId !== null && previousConversationId !== conversationId) {
@@ -146,6 +154,7 @@
       <textarea
         class='bg-background placeholder:text-muted-foreground resize-none flex min-h-28 outline-none flex-grow px-3 py-4 text-base disabled:cursor-not-allowed disabled:opacity-50 md:text-sm max-h-40'
         placeholder='Write a message...'
+        bind:this={promptInput}
         bind:value={prompt}
         onkeydown={handleTextareaKeydown}
       ></textarea>
