@@ -111,33 +111,30 @@ export const POST = (async ({ request }) => {
     prompt,
     onFinish: async ({ text }) => {
       try {
-        await Promise.all([
-          db
-            .update(schema.messages)
-            .set({ isFinal: true, finalText: text, updatedAt: sql`NOW()` })
-            .where(eq(schema.messages.id, assistantMessageId)),
+        await db
+          .update(schema.messages)
+          .set({ isFinal: true, finalText: text, updatedAt: sql`NOW()` })
+          .where(eq(schema.messages.id, assistantMessageId))
 
-          conversationId
-            ? (async () => {
-                try {
-                  const titlePrompt = `Generate a short, descriptive title (max. 3 words and plain text) for the following conversation:\n\n${prompt}`
-                  const titleResult = await generateText({
-                    model: openrouter(modelName),
-                    prompt: titlePrompt,
-                  })
-                  const generatedTitle = titleResult.text.trim()
+        if (!conversationId)
+          return
 
-                  await db
-                    .update(schema.conversations)
-                    .set({ title: generatedTitle, updatedAt: sql`NOW()` })
-                    .where(eq(schema.conversations.id, conversationId))
-                }
-                catch (err) {
-                  console.error('Error generating/updating conversation title:', err)
-                }
-              })()
-            : Promise.resolve(),
-        ])
+        try {
+          const titlePrompt = `Generate a short, descriptive title (max. 3 words and plain text) for the following conversation:\n\n${prompt}`
+          const titleResult = await generateText({
+            model: openrouter(modelName),
+            prompt: titlePrompt,
+          })
+          const generatedTitle = titleResult.text.trim()
+
+          await db
+            .update(schema.conversations)
+            .set({ title: generatedTitle, updatedAt: sql`NOW()` })
+            .where(eq(schema.conversations.id, conversationId))
+        }
+        catch (err) {
+          console.error('Error generating/updating conversation title:', err)
+        }
       }
       catch (err) {
         console.error('Error updating final assistant message:', err)
@@ -162,7 +159,9 @@ export const POST = (async ({ request }) => {
           content: textChunk,
         })
         .catch(err => console.error('Error inserting message chunk:', err))
+
       chunkIndex++
+
       if (done) {
         await db
           .delete(schema.messageChunks)
