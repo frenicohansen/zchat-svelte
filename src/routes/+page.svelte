@@ -4,7 +4,7 @@
   import SidebarLayout from '$lib/components/layout/sidebar-layout.svelte'
   import * as Avatar from '$lib/components/ui/avatar'
   import Button from '$lib/components/ui/button/button.svelte'
-  import { z } from '$lib/zero'
+  import { preload, z } from '$lib/zero'
   import DOMPurify from 'dompurify'
   import { Bot } from 'lucide-svelte'
   import SendHorizontal from 'lucide-svelte/icons/send-horizontal'
@@ -30,6 +30,7 @@
     if (promptInput) {
       promptInput.focus()
     }
+    preload(z)
   })
 
   $effect(() => {

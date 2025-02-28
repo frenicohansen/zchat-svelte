@@ -41,6 +41,7 @@
     "eslint-plugin-tailwindcss": "^3.18.0",
     "lucide-svelte": "^0.476.0",
     "marked": "^15.0.7",
+    "minisearch": "^7.1.2",
     "nanoid": "^5.1.2",
     "pg": "^8.13.3",
     "svelte": "^5.0.0",

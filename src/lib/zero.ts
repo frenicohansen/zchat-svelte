@@ -19,3 +19,22 @@ export async function get_z_options() {
 }
 
 export const z = new Z<Schema>(await get_z_options())
+
+let didPreload = false
+
+export function preload(z: Z<Schema>) {
+  if (didPreload) {
+    return
+  }
+
+  didPreload = true
+
+  z.current.query.conversations
+    .where(({ cmp, or }) => or(
+      cmp('accessLevel', 'public_read'),
+      cmp('userId', 'public_write'),
+      cmp('userId', z.current.userID),
+    ))
+    .related('messages')
+    .preload()
+}
