@@ -1,5 +1,4 @@
 <script lang='ts'>
-  import type { SearchResult } from 'minisearch'
   import * as Command from '$lib/components/ui/command'
   import { z } from '$lib/zero'
   import MiniSearch from 'minisearch'
@@ -10,28 +9,29 @@
     z.current.query.conversations.related('messages'),
   )
 
-  const searchableConversations = $derived(
-    conversations.current.map(conversation => ({
-      id: conversation.id,
-      title: conversation.title,
-      allMessages: conversation.messages.map(message => message.finalText).join('\n'),
-    })),
-  )
-
   const miniSearch = new MiniSearch({
     fields: ['title', 'allMessages'],
     storeFields: ['title'],
+    searchOptions: {
+      boost: { title: 1.5 },
+    },
+    extractField: (document, fieldName) => {
+      if (fieldName === 'allMessages') {
+        const messages = document.messages
+        return messages
+          .map((message: any) => message.finalText)
+          .join('\n')
+      }
+
+      return document[fieldName]
+    },
   })
 
   let searchText = $state('')
-  let searchResults: SearchResult[] = $state([])
-
-  function handleInput() {
-    searchResults = miniSearch.search(searchText)
-  }
+  const searchResults = $derived(miniSearch.search(searchText))
 
   $effect(() => {
-    searchableConversations.forEach((conversation) => {
+    conversations.current.forEach((conversation) => {
       miniSearch.has(conversation.id)
         ? miniSearch.replace(conversation)
         : miniSearch.add(conversation)
@@ -41,7 +41,6 @@
 
 <Command.Dialog
   shouldFilter={false}
-  onValueChange={handleInput}
   bind:open
 >
   <Command.Input
@@ -55,7 +54,13 @@
     {#if searchResults.length > 0}
       <Command.Group heading='Suggestions'>
         {#each searchResults as conversation}
-          <Command.Item>{conversation.title}</Command.Item>
+          <Command.LinkItem
+            href={`#${conversation.id}`}
+            value={conversation.id}
+            onSelect={() => open = false}
+          >
+            {conversation.title}
+          </Command.LinkItem>
         {/each}
       </Command.Group>
     {/if}
