@@ -1,9 +1,9 @@
 <script lang='ts'>
   import * as Command from '$lib/components/ui/command'
-  import { splitMatchedSearch } from '$lib/utils/index'
+  import { loadSearchIndex, scheduleSaveIndex, splitMatchedSearch } from '$lib/utils/index'
   import { z } from '$lib/zero'
   import MiniSearch from 'minisearch'
-  import removeMd from 'remove-markdown'
+  import { onMount } from 'svelte'
   import { Query } from 'zero-svelte'
 
   let { open = $bindable(false) } = $props()
@@ -13,40 +13,33 @@
 
   type Conversation = typeof conversations.current[number]
   type ExtraFields = { title: string, allMessages: string }
-  const miniSearch = new MiniSearch<Conversation>({
-    fields: ['title', 'allMessages'],
-    storeFields: ['title', 'allMessages'],
-    searchOptions: {
-      boost: { title: 1.5 },
-      fuzzy: true,
-      prefix: true,
-    },
-    extractField: (document, fieldName) => {
-      if (fieldName === 'allMessages') {
-        const messages = document.messages
-        return messages
-          .map((message: any) => removeMd(message.finalText))
-          .join(' ')
-      }
-      const value = document[fieldName as keyof typeof document]
-      return value ? String(value) : ''
-    },
-  })
 
   let searchText = $state('')
-  const searchResults = $derived(miniSearch.search(searchText)
-    .map(s => splitMatchedSearch<ExtraFields>(
-      {
-        id: s.id,
-        allMessages: s.allMessages as string,
-        title: s.title as string,
-        match: s.match,
-      },
-      50,
-    )))
+  let miniSearch: MiniSearch<Conversation> | null = null
+
+  const searchResults = $derived.by(() => miniSearch
+    ? miniSearch.search(searchText)
+      .map(s => splitMatchedSearch<ExtraFields>(
+        {
+          id: s.id,
+          allMessages: s.allMessages as string,
+          title: s.title as string,
+          match: s.match,
+        },
+        50,
+      ))
+    : [])
+
+  onMount(async () => {
+    miniSearch = await loadSearchIndex()
+  })
 
   $effect(() => {
     conversations.current.forEach((conversation) => {
+      if (!miniSearch)
+        return
+
+      scheduleSaveIndex(miniSearch.toJSON())
       miniSearch.has(conversation.id)
         ? miniSearch.replace(conversation)
         : miniSearch.add(conversation)
@@ -78,24 +71,33 @@
               <div class='text-sm text-foreground truncate'>
                 {#each result.title as title (title.id)}
                   {#if title.isMatch}
-                    <span class='bg-amber-100 dark:bg-amber-900 rounded-sm'>{title.text}</span>
+                    {#if title.text.toLowerCase().startsWith(searchText.toLowerCase())}
+                      <span class='bg-amber-100 dark:bg-amber-900 rounded-sm'>
+                        {title.text.slice(0, searchText.length)}
+                      </span>{title.text.slice(searchText.length)}
+                    {:else}
+                      <span class='bg-amber-100 dark:bg-amber-900 rounded-sm'>{title.text}</span>
+                    {/if}
                   {:else}
                     {title.text}
                   {/if}
                 {/each}
               </div>
-              <div class='text-sm text-muted-foreground truncate'>
-                {#if result.allMessages[0].start > 0}
-                  ...
-                {/if}
+              <p class='text-sm text-muted-foreground truncate'>
                 {#each result.allMessages as message (message.id)}
                   {#if message.isMatch}
-                    <span class='bg-amber-100 dark:bg-amber-900 rounded-sm'>{message.text}</span>
+                    {#if message.text.toLowerCase().startsWith(searchText.toLowerCase())}
+                      {(message.id === result.allMessages[0].id && result.allMessages[0].start > 0) ? '...' : ''}<span class='bg-amber-100 dark:bg-amber-900 rounded-sm'>
+                        {message.text.slice(0, searchText.length)}
+                      </span>{message.text.slice(searchText.length)}
+                    {:else}
+                      {(message.id === result.allMessages[0].id && result.allMessages[0].start > 0) ? '...' : ''}<span class='bg-amber-100 dark:bg-amber-900 rounded-sm'>{message.text}</span>
+                    {/if}
                   {:else}
-                    {message.text}
+                    {message.id === result.allMessages[0].id && result.allMessages[0].start > 0 ? '...' : ''}{message.text}
                   {/if}
                 {/each}
-              </div>
+              </p>
             </div>
           </Command.LinkItem>
         {/each}

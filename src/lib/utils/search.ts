@@ -1,4 +1,8 @@
-import type { MatchInfo } from 'minisearch'
+import type { AsPlainObject, MatchInfo } from 'minisearch'
+import { db } from '$lib/db/dexie'
+import { z } from '$lib/zero'
+import MiniSearch from 'minisearch'
+import removeMd from 'remove-markdown'
 
 interface MatchSegment {
   id: string
@@ -115,5 +119,53 @@ export function splitMatchedSearch<T extends SearchFields>(
   return {
     id,
     ...processedFields,
+  }
+}
+
+export function getMiniSearchOptions() {
+  return {
+    fields: ['title', 'allMessages'],
+    storeFields: ['title', 'allMessages'],
+    searchOptions: {
+      boost: { title: 1.5 },
+      fuzzy: true,
+      prefix: true,
+    },
+    extractField: (document: any, fieldName: string) => {
+      if (fieldName === 'allMessages') {
+        const messages = document.messages
+        return messages
+          .map((message: any) => removeMd(message.finalText))
+          .join(' ')
+      }
+      const value = document[fieldName as keyof typeof document]
+      return value ? String(value) : ''
+    },
+  }
+}
+
+let saveTimeout: NodeJS.Timeout
+export function scheduleSaveIndex(miniSearchJson: AsPlainObject, delay = 30000) {
+  if (saveTimeout)
+    clearTimeout(saveTimeout)
+  saveTimeout = setTimeout(async () => {
+    await db.searchIndex.put({ userId: z.current.userID, indexObj: miniSearchJson })
+  }, delay)
+}
+
+export async function loadSearchIndex() {
+  const data = await db.searchIndex.where('userId').equals(z.current.userID).first()
+  try {
+    if (data) {
+      return MiniSearch.loadJSONAsync(JSON.stringify(data.indexObj), getMiniSearchOptions())
+    }
+    else {
+      return new MiniSearch(getMiniSearchOptions())
+    }
+  }
+  catch (error) {
+    console.error('Failed to load search index:', error)
+    db.searchIndex.delete(z.current.userID) // destroy the corrupted index
+    return new MiniSearch(getMiniSearchOptions())
   }
 }

@@ -4,6 +4,7 @@
   import * as Avatar from '$lib/components/ui/avatar'
   import * as DropdownMenu from '$lib/components/ui/dropdown-menu'
   import * as Sidebar from '$lib/components/ui/sidebar'
+  import { db } from '$lib/db/dexie'
   import { z } from '$lib/zero'
   import { ChevronDown, LogOut, Settings, User } from 'lucide-svelte'
 
@@ -11,7 +12,8 @@
     await authClient.signOut({
       fetchOptions: {
         onSuccess: () => {
-          z.current.close()
+          db.delete()
+          z.close()
           goto('/login')
         },
       },
