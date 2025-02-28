@@ -12,6 +12,11 @@
   import { onMount } from 'svelte'
   import { Query } from 'zero-svelte'
 
+  let promptInput: HTMLTextAreaElement
+  let prompt = $state('')
+  let responseMessageId: number | null = $state(null)
+  let previousConversationId: string | null = $state(null)
+
   const conversationId = $derived(page.url.hash.length > 1 ? page.url.hash.slice(1) : null)
   const existingMessages = $derived(conversationId
     ? new Query(
@@ -20,26 +25,6 @@
         .orderBy('updatedAt', 'asc'),
     )
     : null)
-
-  let promptInput: HTMLTextAreaElement
-  let prompt = $state('')
-  let responseMessageId: number | null = $state(null)
-  let previousConversationId: string | null = $state(null)
-
-  onMount(() => {
-    if (promptInput) {
-      promptInput.focus()
-    }
-    preload(z)
-  })
-
-  $effect(() => {
-    if (previousConversationId !== null && previousConversationId !== conversationId) {
-      prompt = ''
-      responseMessageId = null
-    }
-    previousConversationId = conversationId
-  })
 
   const responseMessageChunks = $derived(responseMessageId
     ? new Query(
@@ -54,7 +39,7 @@
       return []
 
     const messages = existingMessages.current
-    if (!messages.length || responseMessageId === -1)
+    if (!messages.length || !responseMessageId)
       return messages
 
     const lastMessage = messages[messages.length - 1]
@@ -76,6 +61,21 @@
     return messages
   })
 
+  onMount(() => {
+    if (promptInput) {
+      promptInput.focus()
+    }
+    preload(z)
+  })
+
+  $effect(() => {
+    if (previousConversationId !== null && previousConversationId !== conversationId) {
+      prompt = ''
+      responseMessageId = null
+    }
+    previousConversationId = conversationId
+  })
+
   function handleTextareaKeydown(e: KeyboardEvent) {
     if (e.key === 'Enter' && !e.shiftKey) {
       if (!prompt.includes('\n') || (e.metaKey || e.ctrlKey)) {
@@ -85,6 +85,9 @@
   }
 
   function handleSubmit() {
+    if (!prompt.trim())
+      return
+
     fetch('/api/chat', {
       method: 'POST',
       headers: {
@@ -111,7 +114,7 @@
 
 <SidebarLayout>
   <div class='flex h-full flex-col items-center scroll-smooth px-4 pt-8 gap-8'>
-    {#if existingMessages && existingMessages.current.length > 0}
+    {#if streamingMessages && streamingMessages.length > 0}
       {#each streamingMessages as message (message.id)}
         {#if message.sender === 'assistant'}
           <div class='flex justify-start w-full max-w-4xl'>
@@ -148,7 +151,7 @@
         </div>
       </div>
     {/if}
-    <div class='min-h-8 flex-grow'></div>
+    <div class='mi</Avatar.Root>n-h-8 flex-grow'></div>
     <div class='sticky bottom-0 mt-3 flex w-full max-w-4xl bg-background flex-col items-center justify-end rounded-t-lg pb-4'>
       <form
         class='focus-within:border-ring/20 flex w-full flex-wrap items-end rounded-lg border px-2.5 shadow-sm transition-colors ease-in'
