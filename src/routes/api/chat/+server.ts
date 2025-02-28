@@ -48,7 +48,7 @@ export const POST = (async ({ request }) => {
       else {
         const convRes = await tx
           .insert(schema.conversations)
-          .values({ userId: session.user.id, title: 'Chat Session' })
+          .values({ userId: session.user.id, title: 'New Chat' })
           .returning({ id: schema.conversations.id })
         conversationId = convRes[0].id
       }
@@ -129,8 +129,13 @@ export const POST = (async ({ request }) => {
           .set({ isFinal: true, finalText: text, updatedAt: sql`NOW()` })
           .where(eq(schema.messages.id, assistantMessageId))
 
-        if (!conversationId)
+        // Only update the title when the use doesn't provide a conversation ID (i.e. when creating a new conversation)
+        if (convIdFromClient)
           return
+
+        if (!conversationId) {
+          return error(500, 'Database error creating conversation')
+        }
 
         try {
           const titlePrompt = `Generate a short, descriptive title (max. 3 words and plain text) for the following conversation:\n\n${prompt}`
