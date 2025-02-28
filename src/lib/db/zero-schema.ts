@@ -41,9 +41,9 @@ export const schema = createZeroSchema(drizzleSchema, {
 
 export type Schema = typeof schema
 type TableName = keyof Schema['tables']
-export type Conversations = Row<typeof schema.tables.conversations>
-export type Messages = Row<typeof schema.tables.messages>
-export type MessageChunks = Row<typeof schema.tables.messageChunks>
+export type Conversation = Row<typeof schema.tables.conversations>
+export type Message = Row<typeof schema.tables.messages>
+export type MessageChunk = Row<typeof schema.tables.messageChunks>
 
 interface AuthData {
   sub: string | null

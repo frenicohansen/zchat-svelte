@@ -1,11 +1,6 @@
-<script lang='ts' module>
-  import { authClient } from '$lib/auth-client'
-
-  const { data: session } = await authClient.getSession()
-</script>
-
 <script lang='ts'>
   import { goto } from '$app/navigation'
+  import { authClient } from '$lib/auth-client'
   import * as Avatar from '$lib/components/ui/avatar'
   import * as DropdownMenu from '$lib/components/ui/dropdown-menu'
   import * as Sidebar from '$lib/components/ui/sidebar'
@@ -17,7 +12,7 @@
       fetchOptions: {
         onSuccess: () => {
           z.current.close()
-          goto('/login') // redirect to login page
+          goto('/login')
         },
       },
     })
@@ -28,12 +23,14 @@
   <DropdownMenu.Trigger>
     {#snippet child({ props })}
       <Sidebar.MenuButton {...props}>
-        <Avatar.Root class='mr-2 h-6 w-6'>
-          <Avatar.Fallback>
-            {session?.user.name.split(' ').map(n => n[0].toUpperCase()).join('')}
-          </Avatar.Fallback>
-        </Avatar.Root>
-        <span>{session?.user.name}</span>
+        {#await authClient.getSession() then { data: session }}
+          <Avatar.Root class='mr-2 h-6 w-6'>
+            <Avatar.Fallback>
+              {session?.user.name.split(' ').map(n => n[0].toUpperCase()).join('')}
+            </Avatar.Fallback>
+          </Avatar.Root>
+          <span>{session?.user.name}</span>
+        {/await}
         <ChevronDown class='ml-auto h-4 w-4' />
       </Sidebar.MenuButton>
     {/snippet}

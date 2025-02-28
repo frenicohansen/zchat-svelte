@@ -1,11 +1,3 @@
-<script lang='ts' module>
-  const aiModels = [
-    { value: 'gemini-2.0-flash', label: 'Gemini 2.0 Flash' },
-    { value: 'claude-3-5-sonnet-latest', label: 'Claude 3.5 Sonnet' },
-    { value: 'deepseek-r1', label: 'DeepSeek R1' },
-  ]
-</script>
-
 <script lang='ts'>
   import { page } from '$app/state'
   import AppSidebar from '$lib/components/app-sidebar.svelte'
@@ -14,6 +6,12 @@
   import * as Sidebar from '$lib/components/ui/sidebar'
   import { z } from '$lib/zero'
   import { Query } from 'zero-svelte'
+
+  const aiModels = [
+    { value: 'gemini-2.0-flash', label: 'Gemini 2.0 Flash' },
+    { value: 'claude-3-5-sonnet-latest', label: 'Claude 3.5 Sonnet' },
+    { value: 'deepseek-r1', label: 'DeepSeek R1' },
+  ]
 
   const conversationId = $derived(page.url.hash.slice(1))
   const conversations = new Query(z.current.query.conversations.orderBy('updatedAt', 'desc'))
