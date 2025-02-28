@@ -10,6 +10,7 @@ export default antfu(
   {
     rules: {
       'antfu/no-top-level-await': 'off',
+      'style/indent-binary-ops': 'off',
     },
   },
 )

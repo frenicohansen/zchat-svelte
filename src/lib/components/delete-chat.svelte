@@ -3,7 +3,7 @@
   import { page } from '$app/state'
   import * as AlertDialog from '$lib/components/ui/alert-dialog'
   import { buttonVariants } from '$lib/components/ui/button'
-  import { cn } from '$lib/utils.js'
+  import { cn } from '$lib/utils'
   import { z } from '$lib/zero'
   import X from 'lucide-svelte/icons/x'
   import { Query } from 'zero-svelte'

@@ -2,7 +2,7 @@
   import type { WithElementRef } from 'bits-ui'
   import type { HTMLAttributes } from 'svelte/elements'
   import * as Sheet from '$lib/components/ui/sheet/index.js'
-  import { cn } from '$lib/utils.js'
+  import { cn } from '$lib/utils'
   import { SIDEBAR_WIDTH_MOBILE } from './constants.js'
   import { useSidebar } from './context.svelte.js'
 
@@ -35,10 +35,8 @@
     {@render children?.()}
   </div>
 {:else if sidebar.isMobile}
-  <Sheet.Root
-    bind:open={() => sidebar.openMobile, v => sidebar.setOpenMobile(v)}
-    {...restProps}
-  >
+  <!-- eslint-disable-next-line no-sequences -->
+  <Sheet.Root bind:open={() => sidebar.openMobile, v => sidebar.setOpenMobile(v)} {...restProps}>
     <Sheet.Content
       data-sidebar='sidebar'
       data-mobile='true'

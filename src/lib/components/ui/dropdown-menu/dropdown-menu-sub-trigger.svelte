@@ -1,5 +1,5 @@
 <script lang='ts'>
-  import { cn } from '$lib/utils.js'
+  import { cn } from '$lib/utils'
   import { DropdownMenu as DropdownMenuPrimitive } from 'bits-ui'
   import ChevronRight from 'lucide-svelte/icons/chevron-right'
 

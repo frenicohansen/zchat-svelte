@@ -2,7 +2,7 @@
   import type { WithElementRef } from 'bits-ui'
   import type { Snippet } from 'svelte'
   import type { HTMLAnchorAttributes } from 'svelte/elements'
-  import { cn } from '$lib/utils.js'
+  import { cn } from '$lib/utils'
 
   let {
     ref = $bindable(null),

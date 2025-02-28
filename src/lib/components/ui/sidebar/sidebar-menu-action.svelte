@@ -2,7 +2,7 @@
   import type { WithElementRef } from 'bits-ui'
   import type { Snippet } from 'svelte'
   import type { HTMLButtonAttributes } from 'svelte/elements'
-  import { cn } from '$lib/utils.js'
+  import { cn } from '$lib/utils'
 
   let {
     ref = $bindable(null),
@@ -26,7 +26,8 @@
       'peer-data-[size=lg]/menu-button:top-2.5',
       'group-data-[collapsible=icon]:hidden',
       showOnHover
-      && 'peer-data-[active=true]/menu-button:text-sidebar-accent-foreground group-focus-within/menu-item:opacity-100 group-hover/menu-item:opacity-100 data-[state=open]:opacity-100 md:opacity-0',
+
+        && 'peer-data-[active=true]/menu-button:text-sidebar-accent-foreground group-focus-within/menu-item:opacity-100 group-hover/menu-item:opacity-100 data-[state=open]:opacity-100 md:opacity-0',
       className,
     ),
     'data-sidebar': 'menu-action',
