@@ -31,14 +31,11 @@
   }
 
   $effect(() => {
-    if (searchableConversations.length) {
-      if (miniSearch.documentCount === 0) {
-        miniSearch.addAll(searchableConversations)
-      }
-      else {
-        miniSearch.replace(searchableConversations)
-      }
-    }
+    searchableConversations.forEach((conversation) => {
+      miniSearch.has(conversation.id)
+        ? miniSearch.replace(conversation)
+        : miniSearch.add(conversation)
+    })
   })
 </script>
 
