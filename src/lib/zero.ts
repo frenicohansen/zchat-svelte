@@ -11,7 +11,7 @@ export async function get_z_options() {
   ])
 
   return {
-    userID: session?.session.userId ?? '',
+    userID: session?.session.userId ?? 'anon',
     auth: token?.token ?? '',
     server: PUBLIC_ZERO_SERVER,
     schema,
