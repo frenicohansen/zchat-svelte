@@ -13,7 +13,7 @@
       fetchOptions: {
         onSuccess: () => {
           db.delete()
-          z.instance.close()
+          z.destroy()
           goto('/login')
         },
       },

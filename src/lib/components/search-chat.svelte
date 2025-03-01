@@ -1,22 +1,16 @@
 <script lang='ts'>
   import * as Command from '$lib/components/ui/command'
-  import { loadSearchIndex, scheduleSaveIndex, splitMatchedSearch } from '$lib/utils/index'
+  import { miniSearch, splitMatchedSearch } from '$lib/utils'
   import { z } from '$lib/zero'
-  import MiniSearch from 'minisearch'
-  import { onMount } from 'svelte'
   import { Query } from 'zero-svelte'
 
   let { open = $bindable(false) } = $props()
   const conversations = new Query(z.instance.current.query.conversations.related('messages'))
-
-  type Conversation = typeof conversations.current[number]
   type ExtraFields = { title: string, allMessages: string }
 
   let searchText = $state('')
-  let miniSearch: MiniSearch<Conversation> | null = null
-
   const searchResults = $derived.by(() => miniSearch
-    ? miniSearch.search(searchText)
+    ? miniSearch.instance.search(searchText)
       .map(s => splitMatchedSearch<ExtraFields>(
         {
           id: s.id,
@@ -28,19 +22,15 @@
       ))
     : [])
 
-  onMount(async () => {
-    miniSearch = await loadSearchIndex()
-  })
-
   $effect(() => {
     conversations.current.forEach((conversation) => {
       if (!miniSearch)
         return
 
-      scheduleSaveIndex(miniSearch.toJSON())
-      miniSearch.has(conversation.id)
-        ? miniSearch.replace(conversation)
-        : miniSearch.add(conversation)
+      miniSearch.debouncedSave()
+      miniSearch.instance.has(conversation.id)
+        ? miniSearch.instance.replace(conversation)
+        : miniSearch.instance.add(conversation)
     })
   })
 </script>
@@ -69,12 +59,9 @@
               <div class='text-sm text-foreground truncate'>
                 {#each result.title as title (title.id)}
                   {#if title.isMatch}
-                    {#if title.text.toLowerCase().startsWith(searchText.toLowerCase())}
-                      <span class='bg-amber-100 dark:bg-amber-900 rounded-sm'>
-                        {title.text.slice(0, searchText.length)}
-                      </span>{title.text.slice(searchText.length)}
-                    {:else}
-                      <span class='bg-amber-100 dark:bg-amber-900 rounded-sm'>{title.text}</span>
+                    {@const pos = title.text.toLowerCase().indexOf(searchText.toLowerCase())}
+                    {#if pos >= 0}
+                      {title.text.slice(0, pos)}<span class='bg-amber-100 dark:bg-amber-900 rounded-sm'>{title.text.slice(pos, searchText.length)}</span>{title.text.slice(searchText.length)}
                     {/if}
                   {:else}
                     {title.text}

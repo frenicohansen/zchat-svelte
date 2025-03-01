@@ -12,9 +12,16 @@ export async function get_z_options() {
 
   return {
     userID: session?.session.userId ?? 'anon',
-    auth: token?.token ?? '',
     server: PUBLIC_ZERO_SERVER,
     schema,
+    auth: (error?: 'invalid-token') => {
+      if (error === 'invalid-token') {
+        authClient.signOut()
+        destroyZ()
+        return undefined
+      }
+      return token?.token
+    },
   } as const
 }
 
@@ -27,19 +34,27 @@ export const z = {
     }
     return _z
   },
+  destroy: destroyZ,
 }
 
 export async function initZ() {
   if (!_z) {
     const options = await get_z_options()
     _z = new Z<Schema>(options)
+    preload(_z)
   }
   return _z
 }
 
-let didPreload = false
+function destroyZ() {
+  if (_z) {
+    _z.close()
+    _z = null
+  }
+}
 
-export function preload(z: Z<Schema>) {
+let didPreload = false
+function preload(z: Z<Schema>) {
   if (didPreload) {
     return
   }

@@ -1,6 +1,6 @@
-import type { AsPlainObject, MatchInfo } from 'minisearch'
+import type { MatchInfo } from 'minisearch'
+import { authClient } from '$lib/auth-client'
 import { db } from '$lib/db/dexie'
-import { z } from '$lib/zero'
 import MiniSearch from 'minisearch'
 import removeMd from 'remove-markdown'
 
@@ -122,7 +122,7 @@ export function splitMatchedSearch<T extends SearchFields>(
   }
 }
 
-export function getMiniSearchOptions() {
+function getMiniSearchOptions() {
   return {
     fields: ['title', 'allMessages'],
     storeFields: ['title', 'allMessages'],
@@ -144,28 +144,62 @@ export function getMiniSearchOptions() {
   }
 }
 
-let saveTimeout: NodeJS.Timeout
-export function scheduleSaveIndex(miniSearchJson: AsPlainObject, delay = 30000) {
-  if (saveTimeout)
-    clearTimeout(saveTimeout)
-  saveTimeout = setTimeout(async () => {
-    await db.searchIndex.put({ userId: z.instance.current.userID, indexObj: miniSearchJson })
-  }, delay)
+let _miniSearch: MiniSearch<any> | null = null
+
+export const miniSearch = {
+  get instance() {
+    if (!_miniSearch)
+      throw new Error('MiniSearch instance not initialized. Call initMiniSearch() first')
+
+    return _miniSearch
+  },
+  destroy: destroyMiniSearch,
+  debouncedSave: scheduleSaveIndex,
 }
 
-export async function loadSearchIndex() {
-  const data = await db.searchIndex.where('userId').equals(z.instance.current.userID).first()
+export async function initMiniSearch() {
+  if (_miniSearch)
+    return _miniSearch
+
+  const { data: session } = await authClient.getSession()
+  if (!session)
+    throw new Error('No session found. Login first.')
+
   try {
-    if (data) {
-      return MiniSearch.loadJSONAsync(JSON.stringify(data.indexObj), getMiniSearchOptions())
-    }
-    else {
-      return new MiniSearch(getMiniSearchOptions())
-    }
+    const data = await db.searchIndex.where('userId').equals(session.user.id).first()
+
+    _miniSearch = data
+      ? await MiniSearch.loadJSONAsync(JSON.stringify(data.indexObj), getMiniSearchOptions())
+      : new MiniSearch(getMiniSearchOptions())
   }
   catch (error) {
     console.error('Failed to load search index:', error)
-    db.searchIndex.delete(z.instance.current.userID) // destroy the corrupted index
+    db.searchIndex.delete(session.user.id)
     return new MiniSearch(getMiniSearchOptions())
   }
+  return _miniSearch
+}
+
+function destroyMiniSearch() {
+  if (_miniSearch) {
+    _miniSearch = null
+    db.delete()
+  }
+}
+
+let saveTimeout: NodeJS.Timeout
+function scheduleSaveIndex(delay = 30000) {
+  if (saveTimeout)
+    clearTimeout(saveTimeout)
+
+  saveTimeout = setTimeout(async () => {
+    if (!_miniSearch)
+      throw new Error('MiniSearch instance not initialized. Call initMiniSearch() first')
+
+    const { data: session } = await authClient.getSession()
+    if (!session)
+      throw new Error('No session found. Login first.')
+
+    await db.searchIndex.put({ userId: session.user.id, indexObj: _miniSearch.toJSON() })
+  }, delay)
 }
