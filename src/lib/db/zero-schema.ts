@@ -101,6 +101,10 @@ export const permissions = definePermissions<AuthData, Schema>(schema, () => {
     conversations: {
       row: {
         select: [canSeeConversation],
+        update: {
+          preMutation: [loggedInAndConversationOwner],
+          postMutation: [loggedInAndConversationOwner],
+        },
         delete: [loggedInAndConversationOwner],
       },
     },
