@@ -1,6 +1,5 @@
 <script lang='ts'>
   import { goto } from '$app/navigation'
-  import { page } from '$app/state'
   import * as AlertDialog from '$lib/components/ui/alert-dialog'
   import { buttonVariants } from '$lib/components/ui/button'
   import { cn } from '$lib/utils'
@@ -10,12 +9,17 @@
 
   let show = $state(false)
 
-  const conversationId = $derived(page.url.hash.slice(1))
-  const allMessagesInConversation = $derived(new Query(z.current.query.messages.where('conversationId', conversationId)))
+  // eslint-disable-next-line prefer-const
+  let { conversationId }: { conversationId: string | null } = $props()
+  const allMessagesInConversation = conversationId
+    ? new Query(
+      z.current.query.messages.where('conversationId', conversationId),
+    )
+    : null
 
   async function handleDelete() {
     await z.current.mutateBatch(async (tx) => {
-      allMessagesInConversation.current.forEach((message) => {
+      allMessagesInConversation?.current.forEach((message) => {
         tx.messages.delete({ id: message.id })
       })
       tx.conversations.delete({ id: conversationId })

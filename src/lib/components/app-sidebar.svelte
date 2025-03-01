@@ -83,7 +83,7 @@
                       </a>
                     {/snippet}
                   </Sidebar.MenuButton>
-                  <DeleteChat />
+                  <DeleteChat conversationId={conversation.id} />
                 </div>
               </Sidebar.MenuItem>
             {/each}
