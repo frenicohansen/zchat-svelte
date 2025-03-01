@@ -115,7 +115,11 @@ export const POST = (async ({ request }) => {
     return error(500, 'Database error inserting assistant message.')
   }
 
-  const modelName = 'google/gemini-2.0-flash-lite-preview-02-05:free'
+  const modelName = env.AI_MODEL_NAME
+  if (!modelName) {
+    throw new Error('Missing AI_MODEL_NAME in environment variables')
+  }
+
   const openrouter = createOpenRouter({
     apiKey: env.OPENAI_API_KEY ?? '',
   })
