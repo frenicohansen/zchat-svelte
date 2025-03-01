@@ -141,7 +141,7 @@
         {/if}
       {/each}
     {:else}
-      <div class='flex h-[calc(100vh-12rem)] items-center justify-center'>
+      <div class='flex h-full items-center justify-center'>
         <div class='text-center'>
           <div class='inline-flex h-12 w-12 items-center justify-center rounded-full bg-primary/10 mb-4'>
             <Bot class='h-6 w-6 text-primary' />
