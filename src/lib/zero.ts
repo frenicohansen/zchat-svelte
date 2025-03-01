@@ -18,7 +18,24 @@ export async function get_z_options() {
   } as const
 }
 
-export const z = new Z<Schema>(await get_z_options())
+let _z: Z<Schema> | null = null
+
+export const z = {
+  get instance() {
+    if (!_z) {
+      throw new Error('Z instance not initialized. Call initZ() first')
+    }
+    return _z
+  },
+}
+
+export async function initZ() {
+  if (!_z) {
+    const options = await get_z_options()
+    _z = new Z<Schema>(options)
+  }
+  return _z
+}
 
 let didPreload = false
 

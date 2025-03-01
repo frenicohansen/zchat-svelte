@@ -15,8 +15,15 @@
 
   let { conversations, ref = $bindable(null), ...restProps }: AppSidebarProps = $props()
   const conversationId = $derived(page.url.hash.slice(1))
-  const personalConversations = $derived(conversations.filter(conversation => conversation.userId === z.current.userID))
-  const sharedConversations = $derived(conversations.filter(conversation => conversation.userId !== z.current.userID && (conversation.accessLevel === 'public_read' || conversation.accessLevel === 'public_write')))
+  const personalConversations = $derived(
+    conversations.filter(conversation =>
+      conversation.userId === z.instance.current.userID),
+  )
+  const sharedConversations = $derived(
+    conversations.filter(conversation =>
+      conversation.userId !== z.instance.current.userID
+        && (conversation.accessLevel === 'public_read' || conversation.accessLevel === 'public_write')),
+  )
 
   let showSearch = $state(false)
   function handleOpenSearch() {

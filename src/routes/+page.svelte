@@ -17,10 +17,13 @@
   let previousConversationId: string | null = $state(null)
 
   const conversationId = $derived(page.url.hash.length > 1 ? page.url.hash.slice(1) : null)
-  const conversation = $derived(conversationId ? new Query(z.current.query.conversations.where('id', conversationId).one()) : null)
+  const conversation = $derived(conversationId
+    ? new Query(z.instance.current.query.conversations.where('id', conversationId).one())
+    : null)
+
   const existingMessages = $derived(conversationId
     ? new Query(
-      z.current.query.messages
+      z.instance.current.query.messages
         .where('conversationId', conversationId)
         .orderBy('updatedAt', 'asc'),
     )
@@ -28,7 +31,7 @@
 
   const responseMessageChunks = $derived(responseMessageId
     ? new Query(
-      z.current.query.messageChunks
+      z.instance.current.query.messageChunks
         .where('messageId', responseMessageId)
         .orderBy('chunkIndex', 'asc'),
     )
@@ -62,11 +65,11 @@
   })
 
   const canEnterMessage = $derived(
-    !conversationId || conversation?.current?.accessLevel === 'public_write' || conversation?.current?.userId === z.current.userID,
+    !conversationId || conversation?.current?.accessLevel === 'public_write' || conversation?.current?.userId === z.instance.current.userID,
   )
 
   onMount(() => {
-    preload(z)
+    preload(z.instance)
   })
 
   $effect(() => {

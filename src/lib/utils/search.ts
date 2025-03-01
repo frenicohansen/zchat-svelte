@@ -149,12 +149,12 @@ export function scheduleSaveIndex(miniSearchJson: AsPlainObject, delay = 30000) 
   if (saveTimeout)
     clearTimeout(saveTimeout)
   saveTimeout = setTimeout(async () => {
-    await db.searchIndex.put({ userId: z.current.userID, indexObj: miniSearchJson })
+    await db.searchIndex.put({ userId: z.instance.current.userID, indexObj: miniSearchJson })
   }, delay)
 }
 
 export async function loadSearchIndex() {
-  const data = await db.searchIndex.where('userId').equals(z.current.userID).first()
+  const data = await db.searchIndex.where('userId').equals(z.instance.current.userID).first()
   try {
     if (data) {
       return MiniSearch.loadJSONAsync(JSON.stringify(data.indexObj), getMiniSearchOptions())
@@ -165,7 +165,7 @@ export async function loadSearchIndex() {
   }
   catch (error) {
     console.error('Failed to load search index:', error)
-    db.searchIndex.delete(z.current.userID) // destroy the corrupted index
+    db.searchIndex.delete(z.instance.current.userID) // destroy the corrupted index
     return new MiniSearch(getMiniSearchOptions())
   }
 }

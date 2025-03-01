@@ -17,7 +17,7 @@
   const shareUrl = $derived(`${window.location.origin}/chat/${conversationId}`)
   let copied = $state(false)
 
-  const conversation = $derived(conversationId ? new Query(z.current.query.conversations.where('id', conversationId).one()) : null)
+  const conversation = $derived(conversationId ? new Query(z.instance.current.query.conversations.where('id', conversationId).one()) : null)
   const conversationAccessLecel = $derived(conversation?.current?.accessLevel ?? null)
   const isConversationOwner = $derived(conversation?.current?.accessLevel ?? null)
 
@@ -39,7 +39,7 @@
       return
     }
 
-    z.current.mutate.conversations.update({
+    z.instance.current.mutate.conversations.update({
       id: conversationId,
       accessLevel: shareOption,
     })

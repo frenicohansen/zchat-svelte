@@ -9,7 +9,6 @@ export default antfu(
   ...tailwind.configs['flat/recommended'],
   {
     rules: {
-      'antfu/no-top-level-await': 'off',
       'style/indent-binary-ops': 'off',
     },
   },

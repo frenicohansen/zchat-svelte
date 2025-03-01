@@ -15,7 +15,7 @@
   ]
 
   const conversationId = $derived(page.url.hash.slice(1))
-  const conversations = new Query(z.current.query.conversations.orderBy('updatedAt', 'desc'))
+  const conversations = new Query(z.instance.current.query.conversations.orderBy('updatedAt', 'desc'))
 
   const { children } = $props()
 
