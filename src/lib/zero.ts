@@ -28,11 +28,11 @@ export async function get_z_options() {
 let _z: Z<Schema> | null = null
 
 export const z = {
-  get instance() {
+  get current() {
     if (!_z) {
       throw new Error('Z instance not initialized. Call initZ() first')
     }
-    return _z
+    return _z.current
   },
   destroy: destroyZ,
 }

@@ -17,11 +17,11 @@
   const conversationId = $derived(page.url.hash.slice(1))
   const personalConversations = $derived(
     conversations.filter(conversation =>
-      conversation.userId === z.instance.current.userID),
+      conversation.userId === z.current.userID),
   )
   const sharedConversations = $derived(
     conversations.filter(conversation =>
-      conversation.userId !== z.instance.current.userID
+      conversation.userId !== z.current.userID
         && (conversation.accessLevel === 'public_read' || conversation.accessLevel === 'public_write')),
   )
 
