@@ -61,7 +61,13 @@
                   {#if title.isMatch}
                     {@const pos = title.text.toLowerCase().indexOf(searchText.toLowerCase())}
                     {#if pos >= 0}
-                      {title.text.slice(0, pos)}<span class='bg-amber-100 dark:bg-amber-900 rounded-sm'>{title.text.slice(pos, searchText.length)}</span>{title.text.slice(searchText.length)}
+                      {title.text.slice(0, pos)}<span class='bg-amber-100 dark:bg-amber-900 rounded-sm'>
+                        {title.text.slice(pos, pos + searchText.length)}
+                      </span>{title.text.slice(pos + searchText.length)}
+                    {:else}
+                      <span class='bg-amber-100 dark:bg-amber-900 rounded-sm'>
+                        {title.text}
+                      </span>
                     {/if}
                   {:else}
                     {title.text}
@@ -70,13 +76,17 @@
               </div>
               <p class='text-sm text-muted-foreground truncate'>
                 {#each result.allMessages as message (message.id)}
+                  {@const threeDots = (message.id === result.allMessages[0].id && result.allMessages[0].start > 0) ? '...' : ''}
                   {#if message.isMatch}
-                    {#if message.text.toLowerCase().startsWith(searchText.toLowerCase())}
-                      {(message.id === result.allMessages[0].id && result.allMessages[0].start > 0) ? '...' : ''}<span class='bg-amber-100 dark:bg-amber-900 rounded-sm'>
-                        {message.text.slice(0, searchText.length)}
-                      </span>{message.text.slice(searchText.length)}
+                    {@const pos = message.text.toLowerCase().indexOf(searchText.toLowerCase())}
+                    {#if pos >= 0}
+                      {threeDots + message.text.slice(0, pos)}<span class='bg-amber-100 dark:bg-amber-900 rounded-sm'>
+                        {message.text.slice(pos, pos + searchText.length)}
+                      </span>{message.text.slice(pos + searchText.length)}
                     {:else}
-                      {(message.id === result.allMessages[0].id && result.allMessages[0].start > 0) ? '...' : ''}<span class='bg-amber-100 dark:bg-amber-900 rounded-sm'>{message.text}</span>
+                      {threeDots}<span class='bg-amber-100 dark:bg-amber-900 rounded-sm'>
+                        {message.text}
+                      </span>
                     {/if}
                   {:else}
                     {message.id === result.allMessages[0].id && result.allMessages[0].start > 0 ? '...' : ''}{message.text}

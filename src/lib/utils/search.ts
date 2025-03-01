@@ -51,13 +51,19 @@ function highlightFirstMatch(
 
   const segments: MatchSegment[] = []
 
-  if (start >= 0 && start < firstMatch.start)
-    segments.push(createSegment(text, start, firstMatch.start, false))
+  if (start >= 0 && start < firstMatch.start) {
+    const segment = createSegment(text, start, firstMatch.start, false)
+    segment.text = segment.text.replace(/^\s+/, '')
+    segments.push(segment)
+  }
 
   segments.push(createSegment(text, firstMatch.start, firstMatch.end, true))
 
-  if (end <= text.length && firstMatch.end < end)
-    segments.push(createSegment(text, firstMatch.end, end, false))
+  if (end <= text.length && firstMatch.end < end) {
+    const segment = createSegment(text, firstMatch.end, end, false)
+    segment.text = segment.text.replace(/\s+$/, '')
+    segments.push(segment)
+  }
 
   return segments
 }
