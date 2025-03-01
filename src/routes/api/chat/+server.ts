@@ -129,13 +129,18 @@ export const POST = (async ({ request }) => {
           .set({ isFinal: true, finalText: text, updatedAt: sql`NOW()` })
           .where(eq(schema.messages.id, assistantMessageId))
 
-        // Only update the title when the use doesn't provide a conversation ID (i.e. when creating a new conversation)
-        if (convIdFromClient)
-          return
-
         if (!conversationId) {
           return error(500, 'Database error creating conversation')
         }
+
+        await db
+          .update(schema.conversations)
+          .set({ updatedAt: sql`NOW()` })
+          .where(eq(schema.conversations.id, conversationId))
+
+        // Only update the title when the use doesn't provide a conversation ID (i.e. when creating a new conversation)
+        if (convIdFromClient)
+          return
 
         try {
           const titlePrompt = `Generate a short, descriptive title (max. 3 words and plain text) for the following conversation:\n\n${prompt}`

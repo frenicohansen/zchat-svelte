@@ -7,9 +7,7 @@
   import { Query } from 'zero-svelte'
 
   let { open = $bindable(false) } = $props()
-  const conversations = new Query(
-    z.current.query.conversations.related('messages'),
-  )
+  const conversations = new Query(z.current.query.conversations.related('messages'))
 
   type Conversation = typeof conversations.current[number]
   type ExtraFields = { title: string, allMessages: string }

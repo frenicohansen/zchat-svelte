@@ -7,23 +7,19 @@
   import { z } from '$lib/zero'
   import { Check, Copy, Earth, Link2, Lock, UserRound } from 'lucide-svelte'
   import { toast } from 'svelte-sonner'
+  import { Query } from 'zero-svelte'
 
   // eslint-disable-next-line prefer-const
   let { conversationId }: { conversationId: string | null } = $props()
 
   type ShareOption = 'private' | 'public_read' | 'public_write'
   let shareOption = $state<ShareOption>('private')
+  const shareUrl = $derived(`${window.location.origin}/chat/${conversationId}`)
   let copied = $state(false)
 
-  const shareUrl = $derived(`${window.location.origin}/chat/${conversationId}`)
-  const conversationAccessLecel = $derived.by(() => {
-    const conversation = conversationId ? z.current.query.conversations.where('id', conversationId).one().materialize() : null
-    return conversation?.data?.accessLevel ?? null
-  })
-  const isConversationOwner = $derived.by(() => {
-    const conversation = conversationId ? z.current.query.conversations.where('id', conversationId).one().materialize() : null
-    return conversation?.data?.userId === z.current.userID
-  })
+  const conversation = $derived(conversationId ? new Query(z.current.query.conversations.where('id', conversationId).one()) : null)
+  const conversationAccessLecel = $derived(conversation?.current?.accessLevel ?? null)
+  const isConversationOwner = $derived(conversation?.current?.accessLevel ?? null)
 
   async function handleCopy() {
     try {

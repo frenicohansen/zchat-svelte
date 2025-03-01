@@ -12,9 +12,7 @@
   // eslint-disable-next-line prefer-const
   let { conversationId }: { conversationId: string | null } = $props()
   const allMessagesInConversation = conversationId
-    ? new Query(
-      z.current.query.messages.where('conversationId', conversationId),
-    )
+    ? new Query(z.current.query.messages.where('conversationId', conversationId))
     : null
 
   async function handleDelete() {
