@@ -69,6 +69,8 @@ export const permissions = definePermissions<AuthData, Schema>(schema, () => {
   ) => eb.or(
     loggedInAndConversationOwner(authData, eb),
     eb.cmp('accessLevel', 'public_read'),
+    eb.cmp('accessLevel', 'public_write'),
+
   )
 
   const canSeeMessages = (

@@ -12,12 +12,12 @@
   import { onMount } from 'svelte'
   import { Query } from 'zero-svelte'
 
-  let promptInput: HTMLTextAreaElement
   let prompt = $state('')
   let responseMessageId: number | null = $state(null)
   let previousConversationId: string | null = $state(null)
 
   const conversationId = $derived(page.url.hash.length > 1 ? page.url.hash.slice(1) : null)
+  const conversation = $derived(conversationId ? new Query(z.current.query.conversations.where('id', conversationId).one()) : null)
   const existingMessages = $derived(conversationId
     ? new Query(
       z.current.query.messages
@@ -61,10 +61,11 @@
     return messages
   })
 
+  const canEnterMessage = $derived(
+    !conversationId || conversation?.current?.accessLevel === 'public_write' || conversation?.current?.userId === z.current.userID,
+  )
+
   onMount(() => {
-    if (promptInput) {
-      promptInput.focus()
-    }
     preload(z)
   })
 
@@ -151,28 +152,29 @@
         </div>
       </div>
     {/if}
-    <div class='mi</Avatar.Root>n-h-8 flex-grow'></div>
-    <div class='sticky bottom-0 mt-3 flex w-full max-w-4xl bg-background flex-col items-center justify-end rounded-t-lg pb-4'>
-      <form
-        class='focus-within:border-ring/20 flex w-full flex-wrap items-end rounded-lg border px-2.5 shadow-sm transition-colors ease-in'
-        onsubmit={handleSubmit}
-      >
-        <textarea
-          class='bg-background placeholder:text-muted-foreground resize-none flex min-h-28 outline-none flex-grow px-3 py-4 text-base disabled:cursor-not-allowed disabled:opacity-50 md:text-sm max-h-40'
-          placeholder='Write a message...'
-          bind:this={promptInput}
-          bind:value={prompt}
-          onkeydown={handleTextareaKeydown}
-        ></textarea>
-        <Button
-          class='my-2.5'
-          variant='default'
-          size='icon'
-          type='submit'
+    {#if canEnterMessage}
+      <div class='min-h-8 flex-grow'></div>
+      <div class='sticky bottom-0 mt-3 flex w-full max-w-4xl bg-background flex-col items-center justify-end rounded-t-lg pb-4'>
+        <form
+          class='focus-within:border-ring/20 flex w-full flex-wrap items-end rounded-lg border px-2.5 shadow-sm transition-colors ease-in'
+          onsubmit={handleSubmit}
         >
-          <SendHorizontal class='w-4 h-4' />
-        </Button>
-      </form>
-    </div>
+          <textarea
+            class='bg-background placeholder:text-muted-foreground resize-none flex min-h-28 outline-none flex-grow px-3 py-4 text-base disabled:cursor-not-allowed disabled:opacity-50 md:text-sm max-h-40'
+            placeholder='Write a message...'
+            bind:value={prompt}
+            onkeydown={handleTextareaKeydown}
+          ></textarea>
+          <Button
+            class='my-2.5'
+            variant='default'
+            size='icon'
+            type='submit'
+          >
+            <SendHorizontal class='w-4 h-4' />
+          </Button>
+        </form>
+      </div>
+    {/if}
   </div>
 </SidebarLayout>

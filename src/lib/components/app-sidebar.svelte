@@ -1,23 +1,22 @@
 <script lang='ts'>
+  import type { Conversation } from '$lib/db/zero-schema'
   import type { ComponentProps } from 'svelte'
   import { page } from '$app/state'
   import DeleteChat from '$lib/components/delete-chat.svelte'
   import SearchChat from '$lib/components/search-chat.svelte'
   import SidebarProfile from '$lib/components/sidebar-profile.svelte'
   import * as Sidebar from '$lib/components/ui/sidebar'
+  import { z } from '$lib/zero'
   import { Bot, MessageSquarePlus, Search } from 'lucide-svelte'
 
-  type Conversations = {
-    id: string | null
-    title: string
-  }
-
   type AppSidebarProps = ComponentProps<typeof Sidebar.Root> & {
-    conversations: Conversations[]
+    conversations: Conversation[]
   }
 
   let { conversations, ref = $bindable(null), ...restProps }: AppSidebarProps = $props()
   const conversationId = $derived(page.url.hash.slice(1))
+  const personalConversations = $derived(conversations.filter(conversation => conversation.userId === z.current.userID))
+  const sharedConversations = $derived(conversations.filter(conversation => conversation.userId !== z.current.userID && (conversation.accessLevel === 'public_read' || conversation.accessLevel === 'public_write')))
 
   let showSearch = $state(false)
   function handleOpenSearch() {
@@ -67,12 +66,35 @@
     </Sidebar.Menu>
   </Sidebar.Header>
   <Sidebar.Content>
+    {#if sharedConversations.length > 0}
+      <Sidebar.Group>
+        <Sidebar.GroupLabel>Shared with me</Sidebar.GroupLabel>
+        <Sidebar.GroupContent>
+          <Sidebar.Menu>
+            {#each sharedConversations as conversation (conversation.id)}
+              <Sidebar.MenuItem>
+                <div class='flex w-full items-center'>
+                  <Sidebar.MenuButton isActive={conversation.id === conversationId}>
+                    {#snippet child({ props })}
+                      <a href={`#${conversation.id}`} {...props}>
+                        <Bot class='mr-2 h-4 w-4' />
+                        <span class='truncate'>{conversation.title}</span>
+                      </a>
+                    {/snippet}
+                  </Sidebar.MenuButton>
+                </div>
+              </Sidebar.MenuItem>
+            {/each}
+          </Sidebar.Menu>
+        </Sidebar.GroupContent>
+      </Sidebar.Group>
+    {/if}
     <Sidebar.Group>
       <Sidebar.GroupLabel>Chats</Sidebar.GroupLabel>
       <Sidebar.GroupContent>
         <Sidebar.Menu>
-          {#if conversations.length > 0}
-            {#each conversations as conversation (conversation.id)}
+          {#if personalConversations.length > 0}
+            {#each personalConversations as conversation (conversation.id)}
               <Sidebar.MenuItem>
                 <div class='flex w-full items-center'>
                   <Sidebar.MenuButton isActive={conversation.id === conversationId}>
