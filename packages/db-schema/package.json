@@ -1,0 +1,12 @@
+{
+  "name": "db-schema",
+  "main": "src/index.ts",
+  "devDependencies": {
+    "@types/bun": "latest",
+    "drizzle-orm": "^0.40.0",
+    "nanoid": "^5.1.2"
+  },
+  "peerDependencies": {
+    "typescript": "^5"
+  }
+}
