@@ -2,16 +2,20 @@ import type { Schema } from '$lib/db/zero-schema'
 import { PUBLIC_ZERO_SERVER } from '$env/static/public'
 import { authClient } from '$lib/auth-client'
 import { schema } from '$lib/db/zero-schema'
+import { decodeJwt } from 'jose'
 import { Z } from 'zero-svelte'
 
 export async function get_z_options() {
-  const [{ data: session }, { data: token }] = await Promise.all([
-    authClient.getSession(),
-    authClient.token(),
-  ])
+  const { data: token } = await authClient.token()
+  let payload = token ? decodeJwt(token.token) : null
+
+  const currentTime = Math.floor(Date.now() / 1000)
+  if (payload?.exp && payload.exp < currentTime) {
+    payload = null
+  }
 
   return {
-    userID: session?.session.userId ?? 'anon',
+    userID: payload?.sub ?? 'anon',
     server: PUBLIC_ZERO_SERVER,
     schema,
     auth: (error?: 'invalid-token') => {

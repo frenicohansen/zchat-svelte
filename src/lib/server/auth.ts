@@ -9,19 +9,7 @@ export const auth = betterAuth({
   database: drizzleAdapter(db, {
     provider: 'pg',
   }),
-  plugins: [jwt({
-    jwt: {
-      expirationTime: '30days',
-      definePayload: ({ user }) => {
-        return {
-          sub: user.id,
-          iat: Math.floor(Date.now() / 1000),
-          role: user.role,
-          name: user.name,
-        }
-      },
-    },
-  })],
+  plugins: [jwt()],
   socialProviders: {
     github: {
       clientId: env.GITHUB_CLIENT_ID as string,
