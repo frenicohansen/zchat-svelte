@@ -24,16 +24,22 @@
   const triggerContent = $derived(
     aiModels.find(model => model.value === value)?.label ?? 'Select a model',
   )
+
+  const isLoggedIn = $derived(z.current.userID !== 'anon')
 </script>
 
-<Sidebar.Provider>
-  <AppSidebar variant='inset' conversations={conversations.current} />
+<Sidebar.Provider open={isLoggedIn}>
+  {#if isLoggedIn}
+    <AppSidebar variant='inset' conversations={conversations.current} />
+  {/if}
   <Sidebar.Inset>
     <header class='flex h-16 shrink-0 items-center gap-2 sticky top-0 bg-background z-50'>
       <div class='flex flex-1 items-center justify-between px-4'>
         <div class='flex items-center gap-2'>
-          <Sidebar.Trigger class='-ml-1' />
-          <Separator orientation='vertical' class='mr-2 h-4' />
+          {#if isLoggedIn}
+            <Sidebar.Trigger class='-ml-1' />
+            <Separator orientation='vertical' class='mr-2 h-4' />
+          {/if}
           <div class='flex-1 mr-4'>
             <h1 class='text-lg'>
               {conversations.current.find(c => c.id === conversationSignal.id)?.title || 'Chat'}

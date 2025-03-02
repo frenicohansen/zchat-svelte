@@ -14,7 +14,7 @@
   const conversationSignal = useCurrentConversation()
 
   let shareOption = $state<ShareOption>('private')
-  const shareUrl = $derived(`${window.location.origin}/chat/${conversationSignal.id}`)
+  const shareUrl = $derived(`${window.location.origin}/${shareOption === 'public_read' ? 'share' : 'chat'}/${conversationSignal.id}`)
   let copied = $state(false)
 
   const conversationAccessLecel = $derived(conversationSignal.data?.accessLevel ?? null)
@@ -110,9 +110,9 @@
               <RadioGroup.Item value='public_write' id='public_write' />
               <Link2 class='h-5 w-5 text-muted-foreground' />
               <div class='grid gap-1'>
-                <div>Anyone with the link can edit</div>
+                <div>Logged in users with the link can edit</div>
                 <div class='text-sm text-muted-foreground'>
-                  Anyone with the link can view and continue the conversation
+                  Logged in users with the link can view and continue the conversation
                 </div>
               </div>
             </Label>

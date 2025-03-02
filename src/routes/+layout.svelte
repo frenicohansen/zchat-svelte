@@ -1,7 +1,10 @@
 <script lang='ts'>
+  import { initZ } from '$lib/zero'
   import '../app.pcss'
 
   const { children } = $props()
 </script>
 
-{@render children?.()}
+{#await initZ() then}
+  {@render children?.()}
+{/await}
