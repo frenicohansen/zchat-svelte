@@ -1,11 +1,11 @@
 <script lang='ts'>
   import type { Conversation } from '$lib/db/zero-schema'
   import type { ComponentProps } from 'svelte'
-  import { page } from '$app/state'
   import DeleteChat from '$lib/components/delete-chat.svelte'
   import SearchChat from '$lib/components/search-chat.svelte'
   import SidebarProfile from '$lib/components/sidebar-profile.svelte'
   import * as Sidebar from '$lib/components/ui/sidebar'
+  import { useCurrentConversation } from '$lib/hooks/use-conversation.svelte'
   import { z } from '$lib/zero'
   import { Bot, MessageSquarePlus, Search } from 'lucide-svelte'
 
@@ -14,15 +14,10 @@
   }
 
   let { conversations, ref = $bindable(null), ...restProps }: AppSidebarProps = $props()
-  const conversationId = $derived(page.url.hash.slice(1))
+  const conversationSignal = useCurrentConversation()
   const personalConversations = $derived(
     conversations.filter(conversation =>
       conversation.userId === z.current.userID),
-  )
-  const sharedConversations = $derived(
-    conversations.filter(conversation =>
-      conversation.userId !== z.current.userID
-        && (conversation.accessLevel === 'public_read' || conversation.accessLevel === 'public_write')),
   )
 
   let showSearch = $state(false)
@@ -46,7 +41,7 @@
       <Sidebar.MenuItem>
         <Sidebar.MenuButton>
           {#snippet child({ props })}
-            <a href='/' {...props}>
+            <a href='/chat' {...props}>
               <MessageSquarePlus class='mr-2 h-4 w-4' />
               <span>New Chat</span>
             </a>
@@ -73,29 +68,6 @@
     </Sidebar.Menu>
   </Sidebar.Header>
   <Sidebar.Content>
-    {#if sharedConversations.length > 0}
-      <Sidebar.Group>
-        <Sidebar.GroupLabel>Shared with me</Sidebar.GroupLabel>
-        <Sidebar.GroupContent>
-          <Sidebar.Menu>
-            {#each sharedConversations as conversation (conversation.id)}
-              <Sidebar.MenuItem>
-                <div class='flex w-full items-center'>
-                  <Sidebar.MenuButton isActive={conversation.id === conversationId}>
-                    {#snippet child({ props })}
-                      <a href={`#${conversation.id}`} {...props}>
-                        <Bot class='mr-2 h-4 w-4' />
-                        <span class='truncate'>{conversation.title}</span>
-                      </a>
-                    {/snippet}
-                  </Sidebar.MenuButton>
-                </div>
-              </Sidebar.MenuItem>
-            {/each}
-          </Sidebar.Menu>
-        </Sidebar.GroupContent>
-      </Sidebar.Group>
-    {/if}
     <Sidebar.Group>
       <Sidebar.GroupLabel>Chats</Sidebar.GroupLabel>
       <Sidebar.GroupContent>
@@ -104,9 +76,9 @@
             {#each personalConversations as conversation (conversation.id)}
               <Sidebar.MenuItem>
                 <div class='flex w-full items-center'>
-                  <Sidebar.MenuButton isActive={conversation.id === conversationId}>
+                  <Sidebar.MenuButton isActive={conversation.id === conversationSignal.id}>
                     {#snippet child({ props })}
-                      <a href={`#${conversation.id}`} {...props}>
+                      <a href={`/chat/${conversation.id}`} {...props}>
                         <Bot class='mr-2 h-4 w-4' />
                         <span class='truncate'>{conversation.title}</span>
                       </a>

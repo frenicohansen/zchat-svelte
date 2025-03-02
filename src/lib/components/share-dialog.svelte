@@ -4,22 +4,21 @@
   import { Input } from '$lib/components/ui/input'
   import { Label } from '$lib/components/ui/label'
   import * as RadioGroup from '$lib/components/ui/radio-group'
+  import { useCurrentConversation } from '$lib/hooks/use-conversation.svelte'
   import { z } from '$lib/zero'
   import { Check, Copy, Earth, Link2, Lock, UserRound } from 'lucide-svelte'
   import { toast } from 'svelte-sonner'
-  import { Query } from 'zero-svelte'
-
-  // eslint-disable-next-line prefer-const
-  let { conversationId }: { conversationId: string | null } = $props()
 
   type ShareOption = 'private' | 'public_read' | 'public_write'
+
+  const conversationSignal = useCurrentConversation()
+
   let shareOption = $state<ShareOption>('private')
-  const shareUrl = $derived(`${window.location.origin}/chat/${conversationId}`)
+  const shareUrl = $derived(`${window.location.origin}/chat/${conversationSignal.id}`)
   let copied = $state(false)
 
-  const conversation = $derived(conversationId ? new Query(z.current.query.conversations.where('id', conversationId).one()) : null)
-  const conversationAccessLecel = $derived(conversation?.current?.accessLevel ?? null)
-  const isConversationOwner = $derived(conversation?.current?.accessLevel ?? null)
+  const conversationAccessLecel = $derived(conversationSignal.data?.accessLevel ?? null)
+  const isConversationOwner = $derived(conversationSignal.data?.accessLevel ?? null)
 
   async function handleCopy() {
     try {
@@ -35,19 +34,19 @@
   }
 
   function handleShare() {
-    if (!conversationId) {
+    if (!conversationSignal.id) {
       return
     }
 
     z.current.mutate.conversations.update({
-      id: conversationId,
+      id: conversationSignal.id,
       accessLevel: shareOption,
     })
     toast.success('Sharing settings updated')
   }
 </script>
 
-{#if conversationId && isConversationOwner}
+{#if conversationSignal.id && isConversationOwner}
   <Dialog.Root>
     <Dialog.Trigger>
       {#snippet child({ props })}

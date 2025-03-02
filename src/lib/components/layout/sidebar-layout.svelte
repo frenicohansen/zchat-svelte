@@ -1,10 +1,10 @@
 <script lang='ts'>
-  import { page } from '$app/state'
   import AppSidebar from '$lib/components/app-sidebar.svelte'
   import ShareDialog from '$lib/components/share-dialog.svelte'
   import * as Select from '$lib/components/ui/select'
   import { Separator } from '$lib/components/ui/separator'
   import * as Sidebar from '$lib/components/ui/sidebar'
+  import { useCurrentConversation } from '$lib/hooks/use-conversation.svelte'
   import { z } from '$lib/zero'
   import { Query } from 'zero-svelte'
 
@@ -14,7 +14,7 @@
     { value: 'deepseek-r1', label: 'DeepSeek R1' },
   ]
 
-  const conversationId = $derived(page.url.hash.slice(1))
+  const conversationSignal = useCurrentConversation()
   const conversations = new Query(z.current.query.conversations.orderBy('updatedAt', 'desc'))
 
   const { children } = $props()
@@ -36,7 +36,7 @@
           <Separator orientation='vertical' class='mr-2 h-4' />
           <div class='flex-1 mr-4'>
             <h1 class='text-lg'>
-              {conversations.current.find(c => c.id === conversationId)?.title || 'Chat'}
+              {conversations.current.find(c => c.id === conversationSignal.id)?.title || 'Chat'}
             </h1>
           </div>
           <Select.Root type='single' name='favoriteFruit' bind:value>
@@ -59,7 +59,7 @@
             </Select.Content>
           </Select.Root>
         </div>
-        <ShareDialog conversationId={conversationId} />
+        <ShareDialog />
       </div>
     </header>
     <main class='h-full'>

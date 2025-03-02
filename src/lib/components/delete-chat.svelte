@@ -22,9 +22,10 @@
       })
       tx.conversations.delete({ id: conversationId })
     })
-    miniSearch.instance.remove(conversationId)
+    miniSearch.instance.discard(conversationId)
+    miniSearch.instance.vacuum()
     show = false
-    goto('/')
+    goto('/chat')
   }
 </script>
 
@@ -45,7 +46,7 @@
     </AlertDialog.Header>
     <AlertDialog.Footer>
       <AlertDialog.Cancel>Cancel</AlertDialog.Cancel>
-      <AlertDialog.Action onclick={handleDelete}>Continue</AlertDialog.Action>
+      <AlertDialog.Action variant='destructive' onclick={handleDelete}>Continue</AlertDialog.Action>
     </AlertDialog.Footer>
   </AlertDialog.Content>
 </AlertDialog.Root>

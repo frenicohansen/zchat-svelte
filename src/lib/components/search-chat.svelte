@@ -9,24 +9,19 @@
   type ExtraFields = { title: string, allMessages: string }
 
   let searchText = $state('')
-  const searchResults = $derived.by(() => miniSearch
-    ? miniSearch.instance.search(searchText)
-      .map(s => splitMatchedSearch<ExtraFields>(
-        {
-          id: s.id,
-          allMessages: s.allMessages as string,
-          title: s.title as string,
-          match: s.match,
-        },
-        50,
-      ))
-    : [])
+  const searchResults = $derived(miniSearch.instance.search(searchText)
+    .map(s => splitMatchedSearch<ExtraFields>(
+      {
+        id: s.id,
+        allMessages: s.allMessages as string,
+        title: s.title as string,
+        match: s.match,
+      },
+      50,
+    )))
 
   $effect(() => {
     conversations.current.forEach((conversation) => {
-      if (!miniSearch)
-        return
-
       miniSearch.debouncedSave()
       miniSearch.instance.has(conversation.id)
         ? miniSearch.instance.replace(conversation)
@@ -51,7 +46,7 @@
       <Command.Group heading='Recent Conversations'>
         {#each searchResults as result (result.id)}
           <Command.LinkItem
-            href={`#${result.id}`}
+            href={`/chat/${result.id}`}
             value={result.id}
             onSelect={() => open = false}
           >
