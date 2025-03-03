@@ -1,12 +1,17 @@
 <script lang='ts'>
+  import { page } from '$app/state'
   import SidebarLayout from '$lib/components/layout/sidebar-layout.svelte'
   import * as Avatar from '$lib/components/ui/avatar'
-  import { useStreamingMessages } from '$lib/hooks/use-conversation.svelte'
+  import { conversationId, useStreamingMessages } from '$lib/hooks/use-conversation.svelte'
   import DOMPurify from 'dompurify'
   import { Bot } from 'lucide-svelte'
   import { marked } from 'marked'
 
   const streaming = useStreamingMessages()
+
+  $effect(() => {
+    conversationId.value = page.params.id
+  })
 </script>
 
 <svelte:head>

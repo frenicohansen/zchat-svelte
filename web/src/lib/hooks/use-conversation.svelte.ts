@@ -1,25 +1,26 @@
 import { goto } from '$app/navigation'
-import { page } from '$app/state'
 import { PUBLIC_BACKEND_URL } from '$env/static/public'
 import { z } from '$lib/zero'
 import { Query } from 'zero-svelte'
 
+export const conversationId: { value: string | null } = $state({
+  value: null,
+})
+
 export function useCurrentConversation() {
-  // TODO need to be set from src/routes/chat/[[id]]/+page.svelte
-  const conversationId = $derived(page.params.id)
-  const conversation = $derived(conversationId
-    ? new Query(z.current.query.conversations.where('id', conversationId).one())
+  const conversation = $derived(conversationId.value
+    ? new Query(z.current.query.conversations.where('id', conversationId.value).one())
     : null)
 
+  $inspect('update convo', conversation?.current)
+
   return {
-    get id() { return conversationId },
+    get id() { return conversationId.value },
     get data() { return conversation ? conversation?.current ? conversation.current : null : null },
   }
 }
 
 export function useStreamingMessages() {
-  // TODO need to be set from src/routes/chat/[[id]]/+page.svelte
-  const conversationId = $derived(page.params.id)
   let responseBody: { conversationId?: string, messageId?: number } = $state({})
   let prompt = $state('')
 
@@ -33,7 +34,7 @@ export function useStreamingMessages() {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        conversationId: conversationId ?? null,
+        conversationId: conversationId.value ?? null,
         message: prompt,
       }),
       credentials: 'include',
@@ -46,20 +47,23 @@ export function useStreamingMessages() {
         }
 
         prompt = ''
-        if (body.conversationId !== conversationId)
+        if (body.conversationId !== conversationId.value) {
+          conversationId.value = body.conversation
+          // TODO redirect after the conversation data is created
           goto(`/chat/${body.conversationId}`)
+        }
       })
   }
 
-  const existingMessages = $derived(conversationId
+  const existingMessages = $derived(conversationId.value
     ? new Query(
       z.current.query.messages
-        .where('conversationId', conversationId)
+        .where('conversationId', conversationId.value)
         .orderBy('updatedAt', 'asc'),
     )
     : null)
 
-  const responseMessageChunks = $derived(responseBody.messageId && responseBody.conversationId === conversationId
+  const responseMessageChunks = $derived(responseBody.messageId && responseBody.conversationId === conversationId.value
     ? new Query(
       z.current.query.messageChunks
         .where('messageId', responseBody.messageId)

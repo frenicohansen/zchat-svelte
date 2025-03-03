@@ -1,9 +1,10 @@
 <script lang='ts'>
   import { goto } from '$app/navigation'
+  import { page } from '$app/state'
   import SidebarLayout from '$lib/components/layout/sidebar-layout.svelte'
   import Button from '$lib/components/ui/button/button.svelte'
   import { ScrollArea } from '$lib/components/ui/scroll-area'
-  import { useCurrentConversation, useStreamingMessages } from '$lib/hooks/use-conversation.svelte'
+  import { conversationId, useCurrentConversation, useStreamingMessages } from '$lib/hooks/use-conversation.svelte'
   import { z } from '$lib/zero'
   import DOMPurify from 'dompurify'
   import { Bot } from 'lucide-svelte'
@@ -24,6 +25,7 @@
   )
 
   $effect(() => {
+    conversationId.value = page.params.id
     if (!canShowMessages) {
       goto('/chat')
     }
