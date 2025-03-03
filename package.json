@@ -18,7 +18,9 @@
     "dev:zero": "zero-cache-dev -p web/src/lib/db/zero-schema.ts",
     "dev:db-up": "docker compose --env-file .env -f ./docker/docker-compose.yml up",
     "dev:db-down": "docker compose --env-file .env -f ./docker/docker-compose.yml down",
-    "dev:clean": "source .env && docker volume rm -f docker_zstart_pgdata && rm -rf \"${ZERO_REPLICA_FILE}\"*"
+    "dev:clean": "source .env && docker volume rm -f docker_zstart_pgdata && rm -rf \"${ZERO_REPLICA_FILE}\"*",
+    "build:api": "bun i --filter \"api\" && cd api && bun run build",
+    "build:web": "bun i --filter \"web\" && cd web && bun run build"
   },
   "devDependencies": {
     "@biomejs/biome": "1.9.4",

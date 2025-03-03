@@ -1,38 +1,41 @@
-# sv
+# Development Guide
 
-Everything you need to build a Svelte project, powered by [`sv`](https://github.com/sveltejs/cli).
+## Prerequisites
+- Docker installed
+- Bun installed
 
-## Creating a project
+## Getting Started
 
-If you're seeing this, you've probably already done this step. Congrats!
+1. **Environment Setup**
+  - Clone the repository
+  - Copy `.env.example` to `.env`
+  - Configure environment variables in `.env`
 
-```bash
-# create a new project in the current directory
-npx sv create
-
-# create a new project in my-app
-npx sv create my-app
+2. **Install Dependencies**
+```sh
+bun install
 ```
 
-## Developing
-
-Once you've created a project and installed dependencies with `npm install` (or `pnpm install` or `yarn`), start a development server:
-
-```bash
-npm run dev
-
-# or start the server and open the app in a new browser tab
-npm run dev -- --open
+3. **Database Setup**
+```sh
+bun run dev:db-up
 ```
 
-## Building
-
-To create a production version of your app:
-
-```bash
-npm run build
+4. **Run Zero**
+```sh
+bun run dev:zero
 ```
 
-You can preview the production build with `npm run preview`.
+5. **Start Development Servers**
+```sh
+bun run dev
+```
 
-> To deploy your app, you may need to install an [adapter](https://svelte.dev/docs/kit/adapters) for your target environment.
+## Important: Environment Configuration
+
+Create symbolic links for the `.env` file in both `api` and `web` directories:
+
+```sh
+ln -s .env ./api/.env
+ln -s .env ./web/.env
+```
