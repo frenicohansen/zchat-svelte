@@ -43,6 +43,14 @@ app.on(["POST", "GET"], "/api/auth/*", (c) => {
 
 app.get("/", c => c.text("Hey there!"));
 
+app.get('/health', (c) => {
+  return c.json({ 
+    status: 'ok', 
+    uptime: process.uptime(),
+    timestamp: new Date().toISOString()
+  })
+})
+
 app.route('/chat', chat)
 
 export default app;
