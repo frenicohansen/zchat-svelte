@@ -28,7 +28,7 @@
   const isLoggedIn = $derived(z.current.userID !== 'anon')
 </script>
 
-<Sidebar.Provider open={isLoggedIn}>
+<Sidebar.Provider open={isLoggedIn} class='h-screen'>
   {#if isLoggedIn}
     <AppSidebar variant='inset' conversations={conversations.current} />
   {/if}
@@ -72,7 +72,7 @@
         {/if}
       </div>
     </header>
-    <main class='h-full'>
+    <main class='h-full overflow-hidden'>
       {@render children?.()}
     </main>
   </Sidebar.Inset>
