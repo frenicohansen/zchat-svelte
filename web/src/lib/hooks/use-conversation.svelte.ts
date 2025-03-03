@@ -20,7 +20,7 @@ export function useCurrentConversation() {
 export function useStreamingMessages() {
   // TODO need to be set from src/routes/chat/[[id]]/+page.svelte
   const conversationId = $derived(page.params.id)
-  let responseMessageId: number | null = $state(null)
+  let responseBody: { conversationId?: string, messageId?: number } = $state({})
   let prompt = $state('')
 
   const handleSubmit = () => {
@@ -40,7 +40,11 @@ export function useStreamingMessages() {
     })
       .then(response => response.json())
       .then((body) => {
-        responseMessageId = Number(body.messageId)
+        responseBody = {
+          conversationId: body.conversationId,
+          messageId: Number(body.messageId),
+        }
+
         prompt = ''
         if (body.conversationId !== conversationId)
           goto(`/chat/${body.conversationId}`)
@@ -55,29 +59,30 @@ export function useStreamingMessages() {
     )
     : null)
 
-  const responseMessageChunks = $derived(responseMessageId
+  const responseMessageChunks = $derived(responseBody.messageId && responseBody.conversationId === conversationId
     ? new Query(
       z.current.query.messageChunks
-        .where('messageId', responseMessageId)
+        .where('messageId', responseBody.messageId)
         .orderBy('chunkIndex', 'asc'),
     )
     : null)
 
   const streamingMessages = $derived.by(() => {
-    if (!existingMessages)
+    const messages = existingMessages?.current
+    if (!messages || !messages.length)
       return []
 
-    const messages = existingMessages.current
-    if (!messages.length || !responseMessageId)
+    const chunks = responseMessageChunks?.current
+    if (!chunks || !chunks.length)
       return messages
 
     const lastMessage = messages[messages.length - 1]
     const isProcessingAssistantMessage
       = lastMessage?.sender === 'assistant'
-        && !messages.find(msg => msg.id === responseMessageId)?.isFinal
+        && !messages.find(msg => msg.id === responseBody.messageId)?.isFinal
 
-    if (isProcessingAssistantMessage && responseMessageChunks) {
-      const joinedChunks = responseMessageChunks.current
+    if (isProcessingAssistantMessage && chunks) {
+      const joinedChunks = chunks
         .map(chunk => chunk.content)
         .join('')
 
