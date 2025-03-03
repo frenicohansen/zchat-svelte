@@ -4,6 +4,7 @@
   import DeleteChat from '$lib/components/delete-chat.svelte'
   import SearchChat from '$lib/components/search-chat.svelte'
   import SidebarProfile from '$lib/components/sidebar-profile.svelte'
+  import { ScrollArea } from '$lib/components/ui/scroll-area'
   import * as Sidebar from '$lib/components/ui/sidebar'
   import { useCurrentConversation } from '$lib/hooks/use-conversation.svelte'
   import { z } from '$lib/zero'
@@ -68,32 +69,34 @@
     </Sidebar.Menu>
   </Sidebar.Header>
   <Sidebar.Content>
-    <Sidebar.Group>
-      <Sidebar.GroupLabel>Chats</Sidebar.GroupLabel>
-      <Sidebar.GroupContent>
-        <Sidebar.Menu>
-          {#if personalConversations.length > 0}
-            {#each personalConversations as conversation (conversation.id)}
-              <Sidebar.MenuItem>
-                <div class='flex w-full items-center'>
-                  <Sidebar.MenuButton isActive={conversation.id === conversationSignal.id}>
-                    {#snippet child({ props })}
-                      <a href={`/chat/${conversation.id}`} {...props}>
-                        <Bot class='mr-2 h-4 w-4' />
-                        <span class='truncate'>{conversation.title}</span>
-                      </a>
-                    {/snippet}
-                  </Sidebar.MenuButton>
-                  <DeleteChat conversationId={conversation.id} />
-                </div>
-              </Sidebar.MenuItem>
-            {/each}
-          {:else}
-            <div class='px-4 py-3 text-sm text-muted-foreground'>No conversations found</div>
-          {/if}
-        </Sidebar.Menu>
-      </Sidebar.GroupContent>
-    </Sidebar.Group>
+    <ScrollArea type='auto' orientation='vertical'>
+      <Sidebar.Group>
+        <Sidebar.GroupLabel>Chats</Sidebar.GroupLabel>
+        <Sidebar.GroupContent>
+          <Sidebar.Menu>
+            {#if personalConversations.length > 0}
+              {#each personalConversations as conversation (conversation.id)}
+                <Sidebar.MenuItem>
+                  <div class='flex w-full items-center'>
+                    <Sidebar.MenuButton isActive={conversation.id === conversationSignal.id}>
+                      {#snippet child({ props })}
+                        <a href={`/chat/${conversation.id}`} {...props}>
+                          <Bot class='mr-2 h-4 w-4' />
+                          <span class='truncate'>{conversation.title}</span>
+                        </a>
+                      {/snippet}
+                    </Sidebar.MenuButton>
+                    <DeleteChat conversationId={conversation.id} />
+                  </div>
+                </Sidebar.MenuItem>
+              {/each}
+            {:else}
+              <div class='px-4 py-3 text-sm text-muted-foreground'>No conversations found</div>
+            {/if}
+          </Sidebar.Menu>
+        </Sidebar.GroupContent>
+      </Sidebar.Group>
+    </ScrollArea>
   </Sidebar.Content>
   <Sidebar.Footer>
     <Sidebar.Menu>
