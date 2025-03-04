@@ -32,7 +32,7 @@
     </div>
   {/await}
   <div class='flex items-center relative'>
-    <Button variant="ghost" class="size-6" onclick={handleSignOut}>
+    <Button variant='ghost' class='size-6' onclick={handleSignOut}>
       <LogOut class='size-4' />
       <span class='sr-only'>Log out</span>
     </Button>

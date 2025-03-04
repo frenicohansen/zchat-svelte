@@ -14,9 +14,9 @@ const app = new Hono<{
 }>();
 
 app.post("/", async (c) => {
-  const user = c.get("user");
+	const user = c.get("user");
 
-  if (!user) return c.text("Unauthorized", 401);
+	if (!user) return c.text("Unauthorized", 401);
 
 	const { conversationId: convIdFromClient, message: userMessage } =
 		await c.req.json();
