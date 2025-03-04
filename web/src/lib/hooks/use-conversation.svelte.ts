@@ -21,6 +21,7 @@ export function useCurrentConversation() {
 
 export function useStreamingMessages() {
   let prompt = $state('')
+  const conversation = useCurrentConversation()
 
   const handleSubmit = () => {
     if (!prompt.trim())
@@ -33,7 +34,7 @@ export function useStreamingMessages() {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        conversationId: conversationId.value ?? null,
+        conversationId: conversation.data?.id ?? null,
         message: prompt,
       }),
       credentials: 'include',
