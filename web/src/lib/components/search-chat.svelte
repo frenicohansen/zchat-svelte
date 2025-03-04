@@ -20,13 +20,23 @@
       50,
     )))
 
-  $effect(() => {
-    conversations.current.forEach((conversation) => {
-      miniSearch.debouncedSave()
+  const updateSearch = (docs: typeof conversations) => {
+    docs.current.forEach((conversation) => {
       miniSearch.instance.has(conversation.id)
         ? miniSearch.instance.replace(conversation)
         : miniSearch.instance.add(conversation)
     })
+  }
+
+  $effect(() => {
+    try {
+      updateSearch(conversations)
+    }
+    catch {
+      miniSearch.instance.removeAll()
+      updateSearch(conversations)
+    }
+    miniSearch.debouncedSave()
   })
 </script>
 

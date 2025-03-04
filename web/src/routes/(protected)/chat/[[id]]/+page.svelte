@@ -4,12 +4,13 @@
   import SidebarLayout from '$lib/components/layout/sidebar-layout.svelte'
   import Button from '$lib/components/ui/button/button.svelte'
   import { ScrollArea } from '$lib/components/ui/scroll-area'
-  import { conversationId, useCurrentConversation, useStreamingMessages } from '$lib/hooks/use-conversation.svelte'
+  import { conversationId, optimisticConversations, useCurrentConversation, useStreamingMessages } from '$lib/hooks/use-conversation.svelte'
   import { z } from '$lib/zero'
   import DOMPurify from 'dompurify'
   import { Bot } from 'lucide-svelte'
   import SendHorizontal from 'lucide-svelte/icons/send-horizontal'
   import { marked } from 'marked'
+  import { untrack } from 'svelte'
 
   const conversation = useCurrentConversation()
   const streaming = useStreamingMessages()
@@ -26,9 +27,13 @@
 
   $effect(() => {
     conversationId.value = page.params.id
-    if (!canShowMessages) {
+    const inOptimistic = untrack(() => optimisticConversations.ids.includes(page.params.id))
+
+    if (!canShowMessages && !inOptimistic) {
       goto('/chat')
     }
+
+    optimisticConversations.ids = untrack(() => optimisticConversations.ids.filter(id => id !== page.params.id))
   })
 
   function handleTextareaKeydown(e: KeyboardEvent) {
@@ -56,7 +61,7 @@
                 <div class='rounded-lg px-4 py-2 max-w-[80%] bg-muted/50 backdrop-blur-sm prose'>
                   {/* @ts-ignore */ null}
                   <!-- eslint-disable-next-line svelte/no-at-html-tags -->
-                  {@html DOMPurify.sanitize(marked.parse(message.finalText ?? ''))}
+                  {@html DOMPurify.sanitize(marked.parse(message.finalText.length ? message.finalText : '...'))}
                 </div>
               </div>
             {:else if message.sender === 'user'}

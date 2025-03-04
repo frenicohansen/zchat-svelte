@@ -186,14 +186,16 @@ export async function initMiniSearch() {
   return _miniSearch
 }
 
+let saveTimeout: ReturnType<typeof setTimeout>
+
 function destroyMiniSearch() {
   if (_miniSearch) {
     _miniSearch = null
+    clearTimeout(saveTimeout)
     db.delete()
   }
 }
 
-let saveTimeout: NodeJS.Timeout
 function scheduleSaveIndex(delay = 30000) {
   if (saveTimeout)
     clearTimeout(saveTimeout)

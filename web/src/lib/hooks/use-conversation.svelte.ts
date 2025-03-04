@@ -1,3 +1,4 @@
+import type { Message } from '$lib/db/zero-schema'
 import { goto } from '$app/navigation'
 import { PUBLIC_BACKEND_URL } from '$env/static/public'
 import { z } from '$lib/zero'
@@ -12,16 +13,15 @@ export function useCurrentConversation() {
     ? new Query(z.current.query.conversations.where('id', conversationId.value).one())
     : null)
 
-  $inspect('update convo', conversation?.current)
-
   return {
     get id() { return conversationId.value },
     get data() { return conversation ? conversation?.current ? conversation.current : null : null },
   }
 }
 
+export const optimisticConversations: { ids: string[] } = $state({ ids: [] })
+
 export function useStreamingMessages() {
-  let responseBody: { conversationId?: string, messageId?: number } = $state({})
   let prompt = $state('')
 
   const handleSubmit = () => {
@@ -41,19 +41,17 @@ export function useStreamingMessages() {
     })
       .then(response => response.json())
       .then((body) => {
-        responseBody = {
-          conversationId: body.conversationId,
-          messageId: Number(body.messageId),
-        }
-
         prompt = ''
-        if (body.conversationId !== conversationId.value) {
-          conversationId.value = body.conversation
-          // TODO redirect after the conversation data is created
+        if (!conversationId.value) {
+          optimisticConversations.ids.push(body.conversationId)
           goto(`/chat/${body.conversationId}`)
         }
       })
   }
+
+  let processingMessageId: number | null = $state(null)
+
+  const messageChunks = $derived(processingMessageId ? new Query(z.current.query.messageChunks.where('messageId', processingMessageId).orderBy('chunkIndex', 'asc')) : null)
 
   const existingMessages = $derived(conversationId.value
     ? new Query(
@@ -63,40 +61,42 @@ export function useStreamingMessages() {
     )
     : null)
 
-  const responseMessageChunks = $derived(responseBody.messageId && responseBody.conversationId === conversationId.value
-    ? new Query(
-      z.current.query.messageChunks
-        .where('messageId', responseBody.messageId)
-        .orderBy('chunkIndex', 'asc'),
-    )
-    : null)
+  let streamingMessages: Message[] = $state([])
 
-  const streamingMessages = $derived.by(() => {
+  $effect(() => {
     const messages = existingMessages?.current
-    if (!messages || !messages.length)
-      return []
-
-    const chunks = responseMessageChunks?.current
-    if (!chunks || !chunks.length)
-      return messages
-
-    const lastMessage = messages[messages.length - 1]
-    const isProcessingAssistantMessage
-      = lastMessage?.sender === 'assistant'
-        && !messages.find(msg => msg.id === responseBody.messageId)?.isFinal
-
-    if (isProcessingAssistantMessage && chunks) {
-      const joinedChunks = chunks
-        .map(chunk => chunk.content)
-        .join('')
-
-      return [
-        ...messages.slice(0, -1),
-        { ...lastMessage, finalText: joinedChunks },
-      ]
+    if (!messages || !messages.length) {
+      streamingMessages = []
+      return
     }
 
-    return messages
+    const last = messages[messages.length - 1]
+    const processingMessage
+    = last.sender === 'assistant' && !last.isFinal
+      ? last
+      : null
+
+    if (!processingMessage) {
+      streamingMessages = messages
+      return
+    }
+
+    processingMessageId = processingMessage.id
+
+    const chunks = messageChunks?.current
+    if (!chunks || !chunks.length) {
+      streamingMessages = messages
+      return
+    }
+
+    const joinedChunks = chunks
+      .map(chunk => chunk.content)
+      .join('')
+
+    streamingMessages = [
+      ...messages.filter(msg => msg.id !== processingMessage.id),
+      { ...processingMessage, finalText: joinedChunks },
+    ]
   })
 
   return {
