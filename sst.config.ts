@@ -67,7 +67,7 @@ export default $config({
 				},
 				ports: [
 					{ listen: "80/http", forward: "3000/http" },
-					{ listen: "443/https", forward: "3000/http" }
+					{ listen: "443/https", forward: "3000/http" },
 				],
 			},
 			environment: {
