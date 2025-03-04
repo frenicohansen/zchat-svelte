@@ -1,9 +1,6 @@
 # Demo
 https://chat.z.kohans.de
 
-![image](https://github.com/user-attachments/assets/0b1bdb82-a992-4f27-96ad-7ae99272c1fd)
-
-
 # Development Guide
 
 ## Prerequisites
