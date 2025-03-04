@@ -20,6 +20,7 @@ export async function get_z_options() {
     schema,
     auth: (error?: 'invalid-token') => {
       if (error === 'invalid-token') {
+        console.error('Zero: Invalid token')
         authClient.signOut()
         destroyZ()
         return undefined

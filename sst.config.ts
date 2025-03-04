@@ -1,4 +1,3 @@
-/* eslint-disable */
 /// <reference path="./.sst/platform/config.d.ts" />
 
 import { join } from "node:path";
@@ -92,7 +91,7 @@ export default $config({
 			},
 			environment: {
 				...commonEnv,
-				ZERO_AUTH_JWKS_URL: $interpolate`${authBackend.url}/api/auth/jwks`,
+				ZERO_AUTH_JWKS_URL: $interpolate`${authBackend.url}api/auth/jwks`,
 				ZERO_CHANGE_MAX_CONNS: "3",
 				ZERO_NUM_SYNC_WORKERS: "0",
 			},
@@ -137,7 +136,7 @@ export default $config({
 			},
 			environment: {
 				...commonEnv,
-				ZERO_AUTH_JWKS_URL: $interpolate`${authBackend.url}/api/auth/jwks`,
+				ZERO_AUTH_JWKS_URL: $interpolate`${authBackend.url}api/auth/jwks`,
 				ZERO_CHANGE_STREAMER_URI: replicationManager.url,
 			},
 			logging: {

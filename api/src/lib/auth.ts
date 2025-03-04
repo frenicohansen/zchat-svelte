@@ -25,13 +25,9 @@ export const auth = betterAuth({
 		cookiePrefix: "zchat",
 		crossSubDomainCookies: {
 			enabled: true,
-			domain: new URL(process.env.PUBLIC_FRONTEND_URL ?? "http://localhost:3000").hostname,
+			domain: process.env.PUBLIC_FRONTEND_URL 
+				? `.${new URL(process.env.PUBLIC_FRONTEND_URL).hostname.split('.').slice(-2).join('.')}`
+				: undefined,
 		},
-    defaultCookieAttributes: {
-        secure: true,
-        httpOnly: true,
-        sameSite: "none",  // Allows CORS-based cookie sharing across subdomains
-        partitioned: true, // New browser standards will mandate this for foreign cookies
-    },
 	},
 });

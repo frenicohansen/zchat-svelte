@@ -28,7 +28,8 @@ export function useStreamingMessages() {
     if (!prompt.trim())
       return
 
-    fetch(`${PUBLIC_BACKEND_URL}/chat`, {
+    const backendUrl = PUBLIC_BACKEND_URL.replace(/\/$/, '')
+    fetch(`${backendUrl}/chat`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
