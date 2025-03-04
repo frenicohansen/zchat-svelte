@@ -12,25 +12,21 @@
   import { marked } from 'marked'
   import { untrack } from 'svelte'
 
-  const conversation = useCurrentConversation()
+  const conversationSignal = useCurrentConversation()
   const streaming = useStreamingMessages()
-
-  const canEnterMessage = $derived(
-    !conversation.data || conversation.data.accessLevel === 'public_write' || conversation.data.userId === z.current.userID,
-  )
-
-  const canShowMessages = $derived(
-    conversation.data !== null
-      && (conversation.data.accessLevel !== 'public_read'
-        || conversation.data.userId === z.current.userID),
-  )
 
   $effect(() => {
     conversationId.value = page.params.id
     const inOptimistic = untrack(() => optimisticConversations.ids.includes(page.params.id))
 
-    if (!canShowMessages && !inOptimistic) {
+    const isOwner = conversationSignal.data?.userId === z.current.userID
+    const isPublicRead = conversationSignal.data?.accessLevel === 'public_read'
+
+    if (conversationSignal.data === null && !inOptimistic) {
       goto('/chat')
+    }
+    else if (!isOwner && isPublicRead) {
+      goto(`/share/${page.params.id}`)
     }
 
     optimisticConversations.ids = untrack(() => optimisticConversations.ids.filter(id => id !== page.params.id))
@@ -50,7 +46,7 @@
   <title>Zero Chat - Offline First ChatGPT</title>
 </svelte:head>
 
-<SidebarLayout>
+<SidebarLayout conversation={conversationSignal.data}>
   <div class='flex flex-col items-center h-full '>
     <ScrollArea type='auto' orientation='vertical' class='size-full'>
       <div class='flex flex-col items-center gap-8 h-full py-8'>
@@ -87,29 +83,26 @@
         {/if}
       </div>
     </ScrollArea>
-
-    {#if canEnterMessage}
-      <div class='flex w-full max-w-4xl bg-background flex-col items-center justify-end rounded-t-lg pb-4'>
-        <form
-          class='focus-within:border-ring/20 flex w-full flex-wrap items-end rounded-lg border px-2.5 shadow-sm transition-colors ease-in'
-          onsubmit={streaming.handleSubmit}
+    <div class='flex w-full max-w-4xl bg-background flex-col items-center justify-end rounded-t-lg pb-4'>
+      <form
+        class='focus-within:border-ring/20 flex w-full flex-wrap items-end rounded-lg border px-2.5 shadow-sm transition-colors ease-in'
+        onsubmit={streaming.handleSubmit}
+      >
+        <textarea
+          class='bg-background placeholder:text-muted-foreground resize-none flex min-h-28 outline-none flex-grow px-3 py-4 text-base disabled:cursor-not-allowed disabled:opacity-50 md:text-sm max-h-40'
+          placeholder='Write a message...'
+          bind:value={streaming.prompt}
+          onkeydown={handleTextareaKeydown}
+        ></textarea>
+        <Button
+          class='my-2.5'
+          variant='default'
+          size='icon'
+          type='submit'
         >
-          <textarea
-            class='bg-background placeholder:text-muted-foreground resize-none flex min-h-28 outline-none flex-grow px-3 py-4 text-base disabled:cursor-not-allowed disabled:opacity-50 md:text-sm max-h-40'
-            placeholder='Write a message...'
-            bind:value={streaming.prompt}
-            onkeydown={handleTextareaKeydown}
-          ></textarea>
-          <Button
-            class='my-2.5'
-            variant='default'
-            size='icon'
-            type='submit'
-          >
-            <SendHorizontal class='w-4 h-4' />
-          </Button>
-        </form>
-      </div>
-    {/if}
+          <SendHorizontal class='w-4 h-4' />
+        </Button>
+      </form>
+    </div>
   </div>
 </SidebarLayout>

@@ -1,10 +1,11 @@
 <script lang='ts'>
+  import type { Conversation } from '$lib/db/zero-schema'
+  import type { Snippet } from 'svelte'
   import AppSidebar from '$lib/components/app-sidebar.svelte'
   import ShareDialog from '$lib/components/share-dialog.svelte'
   import * as Select from '$lib/components/ui/select'
   import { Separator } from '$lib/components/ui/separator'
   import * as Sidebar from '$lib/components/ui/sidebar'
-  import { useCurrentConversation } from '$lib/hooks/use-conversation.svelte'
   import { z } from '$lib/zero'
   import { Query } from 'zero-svelte'
 
@@ -14,62 +15,52 @@
     { value: 'deepseek-r1', label: 'DeepSeek R1' },
   ]
 
-  const conversationSignal = useCurrentConversation()
   const conversations = new Query(z.current.query.conversations.orderBy('updatedAt', 'desc'))
 
-  const { children } = $props()
+  // eslint-disable-next-line prefer-const
+  let { conversation, children }: { conversation: Conversation | null, children: Snippet | undefined } = $props()
 
   let value = $state('gemini-2.0-flash')
 
   const triggerContent = $derived(
     aiModels.find(model => model.value === value)?.label ?? 'Select a model',
   )
-
-  const isLoggedIn = $derived(z.current.userID !== 'anon')
 </script>
 
-<Sidebar.Provider open={isLoggedIn} class='h-screen'>
-  {#if isLoggedIn}
-    <AppSidebar variant='inset' conversations={conversations.current} />
-  {/if}
+<Sidebar.Provider class='h-screen'>
+  <AppSidebar variant='inset' conversations={conversations.current} conversation={conversation} />
   <Sidebar.Inset>
     <header class='flex h-16 shrink-0 items-center gap-2 sticky top-0 bg-background z-50'>
       <div class='flex flex-1 items-center justify-between px-4'>
         <div class='flex items-center gap-2'>
-          {#if isLoggedIn}
-            <Sidebar.Trigger class='-ml-1' />
-            <Separator orientation='vertical' class='mr-2 h-4' />
-          {/if}
+          <Sidebar.Trigger class='-ml-1' />
+          <Separator orientation='vertical' class='mr-2 h-4' />
           <div class='flex-1 mr-4'>
             <h1 class='text-lg'>
-              {conversations.current.find(c => c.id === conversationSignal.id)?.title || 'Chat'}
+              {conversation?.title || 'Chat'}
             </h1>
           </div>
-          {#if isLoggedIn}
-            <Select.Root type='single' name='aiModel' bind:value>
-              <Select.Trigger class='w-[180px]'>
-                {triggerContent}
-              </Select.Trigger>
-              <Select.Content>
-                <Select.Group>
-                  <Select.GroupHeading class='py-3'>Models</Select.GroupHeading>
-                  {#each aiModels as model}
-                    <Select.Item
-                      class='h-10 rounded-button text-sm'
-                      value={model.value}
-                      label={model.label}
-                    >
-                      {model.label}
-                    </Select.Item>
-                  {/each}
-                </Select.Group>
-              </Select.Content>
-            </Select.Root>
-          {/if}
+          <Select.Root type='single' name='aiModel' bind:value>
+            <Select.Trigger class='w-[180px]'>
+              {triggerContent}
+            </Select.Trigger>
+            <Select.Content>
+              <Select.Group>
+                <Select.GroupHeading class='py-3'>Models</Select.GroupHeading>
+                {#each aiModels as model}
+                  <Select.Item
+                    class='h-10 rounded-button text-sm'
+                    value={model.value}
+                    label={model.label}
+                  >
+                    {model.label}
+                  </Select.Item>
+                {/each}
+              </Select.Group>
+            </Select.Content>
+          </Select.Root>
         </div>
-        {#if isLoggedIn}
-          <ShareDialog />
-        {/if}
+        <ShareDialog conversation={conversation} />
       </div>
     </header>
     <main class='h-full overflow-hidden'>

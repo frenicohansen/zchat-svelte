@@ -1,24 +1,24 @@
 <script lang='ts'>
+  import type { Conversation } from '$lib/db/zero-schema'
   import { Button } from '$lib/components/ui/button'
   import * as Dialog from '$lib/components/ui/dialog'
   import { Input } from '$lib/components/ui/input'
   import { Label } from '$lib/components/ui/label'
   import * as RadioGroup from '$lib/components/ui/radio-group'
-  import { useCurrentConversation } from '$lib/hooks/use-conversation.svelte'
   import { z } from '$lib/zero'
   import { Check, Copy, Earth, Link2, Lock, UserRound } from 'lucide-svelte'
   import { toast } from 'svelte-sonner'
 
+  // eslint-disable-next-line prefer-const
+  let { conversation }: { conversation: Conversation | null } = $props()
+
   type ShareOption = 'private' | 'public_read' | 'public_write'
-
-  const conversationSignal = useCurrentConversation()
-
   let shareOption = $state<ShareOption>('private')
-  const shareUrl = $derived(`${window.location.origin}/${shareOption === 'public_read' ? 'share' : 'chat'}/${conversationSignal.id}`)
   let copied = $state(false)
 
-  const conversationAccessLecel = $derived(conversationSignal.data?.accessLevel ?? null)
-  const isConversationOwner = $derived(conversationSignal.data?.accessLevel ?? null)
+  const conversationAccessLevel = $derived(conversation?.accessLevel ?? null)
+  const shareUrl = $derived(`${window.location.origin}/${conversationAccessLevel === 'public_read' ? 'share' : 'chat'}/${conversation?.id}`)
+  const isConversationOwner = $derived(conversation?.accessLevel ?? null)
 
   async function handleCopy() {
     try {
@@ -34,19 +34,19 @@
   }
 
   function handleShare() {
-    if (!conversationSignal.id) {
+    if (!conversation?.id) {
       return
     }
 
     z.current.mutate.conversations.update({
-      id: conversationSignal.id,
+      id: conversation.id,
       accessLevel: shareOption,
     })
     toast.success('Sharing settings updated')
   }
 </script>
 
-{#if conversationSignal.id && isConversationOwner}
+{#if conversation?.id && isConversationOwner}
   <Dialog.Root>
     <Dialog.Trigger>
       {#snippet child({ props })}
@@ -80,7 +80,7 @@
         </div>
         <div class='grid gap-4'>
           <Label>Who can access this conversation?</Label>
-          <RadioGroup.Root value={conversationAccessLecel ?? 'private'} onValueChange={value => shareOption = value as ShareOption} class='grid gap-3'>
+          <RadioGroup.Root value={conversationAccessLevel ?? 'private'} onValueChange={value => shareOption = value as ShareOption} class='grid gap-3'>
             <Label
               for='private'
               class='flex items-center gap-4 rounded-lg border p-4 cursor-pointer hover:bg-accent'

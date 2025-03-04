@@ -6,16 +6,16 @@
   import SidebarProfile from '$lib/components/sidebar-profile.svelte'
   import { ScrollArea } from '$lib/components/ui/scroll-area'
   import * as Sidebar from '$lib/components/ui/sidebar'
-  import { useCurrentConversation } from '$lib/hooks/use-conversation.svelte'
   import { z } from '$lib/zero'
   import { Bot, MessageSquarePlus, Search } from 'lucide-svelte'
 
   type AppSidebarProps = ComponentProps<typeof Sidebar.Root> & {
     conversations: Conversation[]
+    conversation: Conversation | null
   }
 
-  let { conversations, ref = $bindable(null), ...restProps }: AppSidebarProps = $props()
-  const conversationSignal = useCurrentConversation()
+  let { conversations, conversation, ref = $bindable(null), ...restProps }: AppSidebarProps = $props()
+
   const personalConversations = $derived(
     conversations.filter(conversation =>
       conversation.userId === z.current.userID),
@@ -75,18 +75,18 @@
         <Sidebar.GroupContent>
           <Sidebar.Menu>
             {#if personalConversations.length > 0}
-              {#each personalConversations as conversation (conversation.id)}
+              {#each personalConversations as personalConversation (personalConversation.id)}
                 <Sidebar.MenuItem>
                   <div class='flex w-full items-center'>
-                    <Sidebar.MenuButton isActive={conversation.id === conversationSignal.id}>
+                    <Sidebar.MenuButton isActive={personalConversation.id === conversation?.id}>
                       {#snippet child({ props })}
-                        <a href={`/chat/${conversation.id}`} {...props}>
+                        <a href={`/chat/${personalConversation.id}`} {...props}>
                           <Bot class='mr-2 h-4 w-4' />
-                          <span class='truncate'>{conversation.title}</span>
+                          <span class='truncate'>{personalConversation.title}</span>
                         </a>
                       {/snippet}
                     </Sidebar.MenuButton>
-                    <DeleteChat conversationId={conversation.id} />
+                    <DeleteChat conversationId={personalConversation.id} />
                   </div>
                 </Sidebar.MenuItem>
               {/each}
