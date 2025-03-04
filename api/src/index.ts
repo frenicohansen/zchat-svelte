@@ -26,7 +26,7 @@ app.use("*", async (c, next) => {
 });
 
 app.use(
-	"/api/auth/*",
+	"*",
 	cors({
 		origin: process.env.PUBLIC_FRONTEND_URL ?? "",
 		allowHeaders: ["Content-Type", "Authorization"],
