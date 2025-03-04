@@ -69,7 +69,7 @@ function preload(z: Z<Schema>) {
   z.current.query.conversations
     .where(({ cmp, or }) => or(
       cmp('accessLevel', 'public_read'),
-      cmp('userId', 'public_write'),
+      cmp('accessLevel', 'public_write'),
       cmp('userId', z.current.userID),
     ))
     .related('messages')
