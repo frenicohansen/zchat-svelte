@@ -10,9 +10,9 @@
   import { Query } from 'zero-svelte'
 
   const aiModels = [
-    { value: 'gemini-2.0-flash', label: 'Gemini 2.0 Flash' },
-    { value: 'claude-3-5-sonnet-latest', label: 'Claude 3.5 Sonnet' },
-    { value: 'deepseek-r1', label: 'DeepSeek R1' },
+    { value: 'gemini-2.0-flash', label: 'Gemini 2.0 Flash', enabled: true },
+    { value: 'claude-3-5-sonnet-latest', label: 'Claude 3.5 Sonnet', enabled: false },
+    { value: 'deepseek-r1', label: 'DeepSeek R1', enabled: false },
   ]
 
   const conversations = new Query(z.current.query.conversations.orderBy('updatedAt', 'desc'))
@@ -52,6 +52,7 @@
                     class='h-10 rounded-button text-sm'
                     value={model.value}
                     label={model.label}
+                    disabled={!model.enabled}
                   >
                     {model.label}
                   </Select.Item>
