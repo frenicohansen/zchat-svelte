@@ -1,8 +1,8 @@
 <script lang='ts'>
   import { goto } from '$app/navigation'
   import * as AlertDialog from '$lib/components/ui/alert-dialog'
-  import { buttonVariants } from '$lib/components/ui/button'
-  import { cn, miniSearch } from '$lib/utils'
+  import * as Sidebar from '$lib/components/ui/sidebar'
+  import { miniSearch } from '$lib/utils'
   import { z } from '$lib/zero'
   import X from 'lucide-svelte/icons/x'
   import { Query } from 'zero-svelte'
@@ -30,12 +30,13 @@
 </script>
 
 <AlertDialog.Root bind:open={show}>
-  <AlertDialog.Trigger
-    class={cn(buttonVariants({ variant: 'ghost', size: 'icon' }), 'h-8 w-8 opacity-0 group-hover/menu-item:opacity-100')}
-    onclick={() => show = true}
-  >
-    <X class='h-4 w-4' />
-    <span class='sr-only'>Delete</span>
+  <AlertDialog.Trigger onclick={() => show = true}>
+    {#snippet child({ props })}
+      <Sidebar.MenuAction {...props}>
+        <X class='size-3 text-sidebar-foreground' />
+        <span class='sr-only'>Delete</span>
+      </Sidebar.MenuAction>
+    {/snippet}
   </AlertDialog.Trigger>
   <AlertDialog.Content>
     <AlertDialog.Header>
