@@ -1,3 +1,6 @@
+# Demo
+https://chat.z.kohans.de
+
 # Development Guide
 
 ## Prerequisites
@@ -8,7 +11,7 @@
 
 1. **Environment Setup**
   - Clone the repository
-  - Copy `.env.example` to `.env`
+  - Copy `.env.local.example` to `.env`
   - Configure environment variables in `.env`
 
 2. **Install Dependencies**

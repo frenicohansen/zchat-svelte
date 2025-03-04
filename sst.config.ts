@@ -43,8 +43,9 @@ export default $config({
 			ZERO_UPSTREAM_MAX_CONNS: "10",
 		};
 
-		const appEnv = {
-			AUTH_SECRET: process.env.AUTH_SECRET ?? "",
+		const backendEnv = {
+			BETTER_AUTH_URL: `https://${process.env.BACKEND_DOMAIN}`,
+			BETTER_AUTH_SECRET: process.env.AUTH_SECRET ?? "",
 			GITHUB_CLIENT_ID: process.env.GITHUB_CLIENT_ID ?? "",
 			GITHUB_CLIENT_SECRET: process.env.GITHUB_CLIENT_SECRET ?? "",
 			OPENAI_API_KEY: process.env.OPENAI_API_KEY ?? "",
@@ -53,13 +54,25 @@ export default $config({
 		};
 
 		// Auth Backend
-		const authBackend = new sst.aws.Function("auth-backend", {
-			url: {
-        cors: false // cors handled by the server already
-      },
-			handler: "api/src/index.handler",
+		const authBackend = new sst.aws.Service("auth-backend", {
+			cluster,
+			image: {
+				context: ".",
+				dockerfile: "./Dockerfile.api",
+			},
+			loadBalancer: {
+				public: true,
+				domain: {
+					name: process.env.BACKEND_DOMAIN ?? "",
+					dns: sst.cloudflare.dns(),
+				},
+				ports: [
+					{ listen: "80/http", forward: "3000/http" },
+					{ listen: "443/https", forward: "3000/http" }
+				],
+			},
 			environment: {
-				...appEnv,
+				...backendEnv,
 				DATABASE_URL: commonEnv.ZERO_UPSTREAM_DB,
 			},
 		});

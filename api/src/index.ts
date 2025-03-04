@@ -1,5 +1,4 @@
 import { Hono } from "hono";
-import { handle } from "hono/aws-lambda";
 import { cors } from "hono/cors";
 import { auth } from "./lib/auth";
 import chat from "./chat";
@@ -54,5 +53,4 @@ app.get("/health", (c) => {
 
 app.route("/chat", chat);
 
-export const handler = handle(app);
 export default app;

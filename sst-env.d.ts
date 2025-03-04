@@ -6,8 +6,8 @@
 declare module "sst" {
   export interface Resource {
     "auth-backend": {
-      "name": string
-      "type": "sst.aws.Function"
+      "service": string
+      "type": "sst.aws.Service"
       "url": string
     }
     "replication-bucket": {
@@ -36,4 +36,3 @@ declare module "sst" {
 /// <reference path="sst-env.d.ts" />
 
 import "sst"
-export {}

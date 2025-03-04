@@ -1,9 +1,7 @@
 {
 	"name": "api",
 	"scripts": {
-		"dev": "bun run --hot src/index.ts",
-		"start": "bun run src/index.ts",
-		"build": "bun build src/index.ts --compile --outfile server"
+		"dev": "bun run --hot src/index.ts"
 	},
 	"dependencies": {
 		"@openrouter/ai-sdk-provider": "^0.4.2",
