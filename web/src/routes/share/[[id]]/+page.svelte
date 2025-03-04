@@ -16,11 +16,8 @@
     conversationId.value = page.params.id
     const isOwner = conversationSignal.data?.userId === z.current.userID
     const isPublicWrite = conversationSignal.data?.accessLevel === 'public_write'
-
-    if (conversationSignal.data === null) {
-      goto('/')
-    }
-    else if (isOwner || isPublicWrite) {
+    
+    if (isOwner || isPublicWrite) {
       goto(`/chat/${page.params.id}`)
     }
   })

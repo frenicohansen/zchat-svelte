@@ -19,8 +19,6 @@ export function useCurrentConversation() {
   }
 }
 
-export const optimisticConversations: { ids: string[] } = $state({ ids: [] })
-
 export function useStreamingMessages() {
   let prompt = $state('')
 
@@ -44,7 +42,6 @@ export function useStreamingMessages() {
       .then((body) => {
         prompt = ''
         if (!conversationId.value) {
-          optimisticConversations.ids.push(body.conversationId)
           goto(`/chat/${body.conversationId}`)
         }
       })

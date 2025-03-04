@@ -4,32 +4,25 @@
   import SidebarLayout from '$lib/components/layout/sidebar-layout.svelte'
   import Button from '$lib/components/ui/button/button.svelte'
   import { ScrollArea } from '$lib/components/ui/scroll-area'
-  import { conversationId, optimisticConversations, useCurrentConversation, useStreamingMessages } from '$lib/hooks/use-conversation.svelte'
+  import { conversationId, useCurrentConversation, useStreamingMessages } from '$lib/hooks/use-conversation.svelte'
   import { z } from '$lib/zero'
   import DOMPurify from 'dompurify'
   import { Bot } from 'lucide-svelte'
   import SendHorizontal from 'lucide-svelte/icons/send-horizontal'
   import { marked } from 'marked'
-  import { untrack } from 'svelte'
 
   const conversationSignal = useCurrentConversation()
   const streaming = useStreamingMessages()
 
   $effect(() => {
     conversationId.value = page.params.id
-    const inOptimistic = untrack(() => optimisticConversations.ids.includes(page.params.id))
 
     const isOwner = conversationSignal.data?.userId === z.current.userID
     const isPublicRead = conversationSignal.data?.accessLevel === 'public_read'
 
-    if (conversationSignal.data === null && !inOptimistic) {
-      goto('/chat')
-    }
-    else if (!isOwner && isPublicRead) {
+    if (!isOwner && isPublicRead) {
       goto(`/share/${page.params.id}`)
     }
-
-    optimisticConversations.ids = untrack(() => optimisticConversations.ids.filter(id => id !== page.params.id))
   })
 
   function handleTextareaKeydown(e: KeyboardEvent) {
