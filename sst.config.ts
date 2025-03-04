@@ -132,7 +132,14 @@ export default $config({
 			},
 			loadBalancer: {
 				public: true,
-				rules: [{ listen: "80/http", forward: "4848/http" }],
+				domain: {
+					name: process.env.ZERO_DOMAIN ?? "",
+					dns: sst.cloudflare.dns(),
+				},
+				rules: [
+					{ listen: "80/http", forward: "4848/http" },
+					{ listen: "443/https", forward: "4848/http" },
+				],
 			},
 			transform: {
 				target: {
