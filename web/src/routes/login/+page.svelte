@@ -1,5 +1,5 @@
 <script lang='ts'>
-  import { PUBLIC_FRONTEND_URL } from '$env/static/public'
+  import { page } from '$app/state'
   import { authClient } from '$lib/auth-client'
   import { Button } from '$lib/components/ui/button'
   import * as Card from '$lib/components/ui/card'
@@ -9,7 +9,7 @@
   const signIn = async () => {
     await authClient.signIn.social({
       provider: 'github',
-      callbackURL: PUBLIC_FRONTEND_URL,
+      callbackURL: `${page.url.origin}/chat`,
     })
   }
 </script>

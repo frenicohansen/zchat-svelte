@@ -1,7 +1,8 @@
 import { Hono } from "hono";
+import { handle } from "hono/aws-lambda";
 import { cors } from "hono/cors";
 import { auth } from "./lib/auth";
-import chat from "./chat"
+import chat from "./chat";
 
 const app = new Hono<{
 	Variables: {
@@ -28,7 +29,7 @@ app.use("*", async (c, next) => {
 app.use(
 	"/api/auth/*",
 	cors({
-		origin: process.env.PUBLIC_FRONTEND_URL ?? "*",
+		origin: process.env.PUBLIC_FRONTEND_URL ?? "",
 		allowHeaders: ["Content-Type", "Authorization"],
 		allowMethods: ["POST", "GET", "OPTIONS"],
 		exposeHeaders: ["Content-Length"],
@@ -41,16 +42,16 @@ app.on(["POST", "GET"], "/api/auth/*", (c) => {
 	return auth.handler(c.req.raw);
 });
 
-app.get("/", c => c.text("Hey there!"));
+app.get("/", (c) => c.text("Hey there!"));
 
-app.get('/health', (c) => {
-  return c.json({ 
-    status: 'ok', 
-    uptime: process.uptime(),
-    timestamp: new Date().toISOString()
-  })
-})
+app.get("/health", (c) => {
+	return c.json({
+		status: "ok",
+		uptime: process.uptime(),
+		timestamp: new Date().toISOString(),
+	});
+});
 
-app.route('/chat', chat)
+app.route("/chat", chat);
 
-export default app;
+export const handler = handle(app);
