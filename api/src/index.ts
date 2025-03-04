@@ -55,3 +55,4 @@ app.get("/health", (c) => {
 app.route("/chat", chat);
 
 export const handler = handle(app);
+export default app;
