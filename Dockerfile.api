@@ -30,4 +30,7 @@ COPY --from=prerelease /usr/src/app/packages/db-schema ./packages/db-schema
 # run the app
 USER bun
 EXPOSE 3000/tcp
+
+HEALTHCHECK --interval=60s --timeout=10s --retries=3 CMD wget --no-verbose --tries=1 --spider http://localhost:3000/health || exit 1
+
 ENTRYPOINT [ "bun", "run", "api/src/index.ts" ]
