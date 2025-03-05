@@ -2,6 +2,7 @@
   import { goto } from '$app/navigation'
   import { page } from '$app/state'
   import SidebarLayout from '$lib/components/layout/sidebar-layout.svelte'
+  import ScrollToBottom from '$lib/components/scroll-to-bottom.svelte'
   import Button from '$lib/components/ui/button/button.svelte'
   import { ScrollArea } from '$lib/components/ui/scroll-area'
   import {
@@ -29,6 +30,49 @@
     }
   })
 
+  let scrollContainerRef = $state<HTMLDivElement | null>(null)
+  let followMessage = $state(false)
+  let isAtBottom = $state(false)
+  let lastScrollTop = $state(0)
+  let isScrollingUp = $state(false)
+
+  function handleScroll() {
+    if (!scrollContainerRef)
+      return true
+    const threshold = 100
+    isAtBottom = (scrollContainerRef.scrollHeight - scrollContainerRef.scrollTop - scrollContainerRef.clientHeight) < threshold
+
+    isScrollingUp = scrollContainerRef.scrollTop < lastScrollTop
+    lastScrollTop = scrollContainerRef.scrollTop
+  }
+
+  function scrollToBottom() {
+    if (!scrollContainerRef)
+      return
+    scrollContainerRef.scrollTo({
+      top: scrollContainerRef.scrollHeight,
+      behavior: 'smooth',
+    })
+  }
+
+  $effect(() => {
+    isAtBottom = !conversationId.value
+  })
+
+  $effect(() => {
+    const messages = streaming.messages
+    if (!messages.length)
+      return
+
+    const lastMessage = messages[messages.length - 1]
+    const lastMessageByUser = lastMessage && lastMessage.sender === 'user'
+    const atBottomNotScrollingUp = isAtBottom && !isScrollingUp
+
+    if ((followMessage && atBottomNotScrollingUp) || lastMessageByUser) {
+      scrollToBottom()
+    }
+  })
+
   function handleTextareaKeydown(e: KeyboardEvent) {
     if (e.key === 'Enter' && !e.shiftKey) {
       if (!streaming.prompt.includes('\n') || e.metaKey || e.ctrlKey) {
@@ -43,9 +87,15 @@
   <title>Zero Chat - Offline First ChatGPT</title>
 </svelte:head>
 
-<SidebarLayout conversation={conversationSignal.data}>
+<SidebarLayout conversation={conversationSignal.data} bind:followMessage>
   <div class='flex flex-col items-center h-full'>
-    <ScrollArea type='auto' orientation='vertical' class='size-full'>
+    <ScrollArea
+      bind:refViewport={scrollContainerRef}
+      onscroll={handleScroll}
+      type='auto'
+      orientation='vertical'
+      class='size-full'
+    >
       <div class='flex flex-col items-center gap-8 h-full py-8'>
         {#if streaming.messages && streaming.messages.length > 0}
           {#each streaming.messages as message (message.id)}
@@ -54,18 +104,23 @@
                 <div
                   class='rounded-lg px-4 py-2 max-w-[80%] bg-muted/50 text-foreground backdrop-blur-sm prose'
                 >
-                  {#if message.finalText?.length === 0}
-                    <div
-                      class='animate-pulse inline-block size-1 bg-gray-400 rounded-full mr-0.5'
-                    ></div>
-                    <div
-                      class='animate-pulse inline-block size-1 bg-gray-400 rounded-full mr-0.5'
-                      style='animation-delay: 0.2s'
-                    ></div>
-                    <div
-                      class='animate-pulse inline-block size-1 bg-gray-400 rounded-full'
-                      style='animation-delay: 0.4s'
-                    ></div>
+                  {#if !message.finalText?.length}
+                    {#if message.isFinal}
+                      <span class='text-destructive dark:text-red-400'>Error: Please try again.</span>
+                    {:else}
+                      <div
+                        class='animate-pulse inline-block size-1 bg-gray-400 rounded-full mr-0.5'
+                      ></div>
+                      <div
+                        class='animate-pulse inline-block size-1 bg-gray-400 rounded-full mr-0.5'
+                        style='animation-delay: 0.2s'
+                      ></div>
+                      <div
+                        class='animate-pulse inline-block size-1 bg-gray-400 rounded-full'
+                        style='animation-delay: 0.4s'
+                      ></div>
+                    {/if}
+
                   {:else}
                     {/* @ts-ignore */ null}
                     <!-- eslint-disable-next-line svelte/no-at-html-tags -->
@@ -104,9 +159,10 @@
       class='flex w-full max-w-4xl bg-background flex-col items-center justify-end rounded-t-lg pb-4'
     >
       <form
-        class='focus-within:border-ring/20 flex w-full flex-wrap items-end rounded-lg border px-2.5 shadow-sm transition-colors ease-in'
+        class='focus-within:border-ring/20 flex relative w-full flex-wrap items-end rounded-lg border px-2.5 shadow-sm transition-colors ease-in'
         onsubmit={streaming.handleSubmit}
       >
+        <ScrollToBottom visible={!isAtBottom} scrollToBottom={scrollToBottom} />
         <textarea
           class='bg-background placeholder:text-muted-foreground resize-none flex min-h-28 outline-none flex-grow px-3 py-4 text-base disabled:cursor-not-allowed disabled:opacity-50 md:text-sm max-h-40'
           placeholder='Write a message...'

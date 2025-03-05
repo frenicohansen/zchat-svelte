@@ -3,9 +3,11 @@
   import type { Snippet } from 'svelte'
   import AppSidebar from '$lib/components/app-sidebar.svelte'
   import ShareDialog from '$lib/components/share-dialog.svelte'
+  import { Label } from '$lib/components/ui/label'
   import * as Select from '$lib/components/ui/select'
   import { Separator } from '$lib/components/ui/separator'
   import * as Sidebar from '$lib/components/ui/sidebar'
+  import { Switch } from '$lib/components/ui/switch'
   import { z } from '$lib/zero'
   import { Query } from 'zero-svelte'
 
@@ -17,8 +19,12 @@
 
   const conversations = new Query(z.current.query.conversations.orderBy('updatedAt', 'desc'))
 
-  // eslint-disable-next-line prefer-const
-  let { conversation, children }: { conversation: Conversation | null, children: Snippet | undefined } = $props()
+  interface SidebarLayoutProps {
+    conversation: Conversation | null
+    followMessage?: boolean
+    children?: Snippet
+  }
+  let { conversation, followMessage = $bindable(false), children }: SidebarLayoutProps = $props()
 
   let value = $state('gemini-2.0-flash')
 
@@ -66,7 +72,19 @@
             </Select.Content>
           </Select.Root>
         </div>
-        <ShareDialog conversation={conversation} />
+        <div class='flex items-center gap-3'>
+          <div class='flex items-center gap-2 bg-muted/30 px-2 py-1 rounded-md'>
+            <Label for='follow-messages' class='text-xs text-muted-foreground select-none'>
+              Auto-scroll
+            </Label>
+            <Switch
+              id='follow-messages'
+              checked={followMessage}
+              onCheckedChange={() => followMessage = !followMessage}
+            />
+          </div>
+          <ShareDialog conversation={conversation} />
+        </div>
       </div>
     </header>
     <main class='h-full overflow-hidden'>
