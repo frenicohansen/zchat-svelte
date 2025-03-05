@@ -15,6 +15,7 @@
   import { Bot } from 'lucide-svelte'
   import SendHorizontal from 'lucide-svelte/icons/send-horizontal'
   import { marked } from 'marked'
+  import { tick } from 'svelte'
 
   const conversationSignal = useCurrentConversation()
   const streaming = useStreamingMessages()
@@ -36,11 +37,15 @@
   let lastScrollTop = $state(0)
   let isScrollingUp = $state(false)
 
+  function calculateIsAtBottom(scrollContainerRef: HTMLDivElement) {
+    const threshold = 100
+    return (scrollContainerRef.scrollHeight - scrollContainerRef.scrollTop - scrollContainerRef.clientHeight) < threshold
+  }
+
   function handleScroll() {
     if (!scrollContainerRef)
       return true
-    const threshold = 100
-    isAtBottom = (scrollContainerRef.scrollHeight - scrollContainerRef.scrollTop - scrollContainerRef.clientHeight) < threshold
+    isAtBottom = calculateIsAtBottom(scrollContainerRef)
 
     isScrollingUp = scrollContainerRef.scrollTop < lastScrollTop
     lastScrollTop = scrollContainerRef.scrollTop
@@ -56,7 +61,17 @@
   }
 
   $effect(() => {
-    isAtBottom = !conversationId.value
+    const isNew = !conversationId.value
+    if (isNew) {
+      isAtBottom = true
+    }
+    else {
+      const messages = streaming.messages
+      tick().then(() => {
+        if (scrollContainerRef && messages.length)
+          isAtBottom = calculateIsAtBottom(scrollContainerRef)
+      })
+    }
   })
 
   $effect(() => {
