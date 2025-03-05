@@ -127,85 +127,84 @@ app.post("/", async (c) => {
 		apiKey: process.env.OPENAI_API_KEY ?? "",
 	});
 
-	let reader: ReadableStreamDefaultReader<string> | null = null;
-	try {
-		const result = streamText({
-			model: openrouter(modelName),
-			prompt,
-			onFinish: async ({ text }) => {
-				try {
-					await db
-						.update(schema.messages)
-						.set({ isFinal: true, finalText: text, updatedAt: sql`NOW()` })
-						.where(eq(schema.messages.id, assistantMessageId));
+	const result = streamText({
+		model: openrouter(modelName),
+		prompt,
+		onFinish: async ({ text }) => {
+			try {
+				await db
+					.update(schema.messages)
+					.set({ isFinal: true, finalText: text, updatedAt: sql`NOW()` })
+					.where(eq(schema.messages.id, assistantMessageId));
 
-					if (!conversationId) return;
+				if (!conversationId) return;
+
+				await db
+					.update(schema.conversations)
+					.set({ updatedAt: sql`NOW()` })
+					.where(eq(schema.conversations.id, conversationId));
+
+				// Only update the title when the use doesn't provide a conversation ID (i.e. when creating a new conversation)
+				if (convIdFromClient) return;
+
+				try {
+					const titlePrompt = `Generate a short, descriptive title (max. 3 words and plain text) for the following conversation:\n\n${prompt}`;
+					const titleResult = await generateText({
+						model: openrouter(modelName),
+						prompt: titlePrompt,
+					});
+					const generatedTitle = titleResult.text.trim();
 
 					await db
 						.update(schema.conversations)
-						.set({ updatedAt: sql`NOW()` })
+						.set({ title: generatedTitle, updatedAt: sql`NOW()` })
 						.where(eq(schema.conversations.id, conversationId));
-
-					// Only update the title when the use doesn't provide a conversation ID (i.e. when creating a new conversation)
-					if (convIdFromClient) return;
-
-					try {
-						const titlePrompt = `Generate a short, descriptive title (max. 3 words and plain text) for the following conversation:\n\n${prompt}`;
-						const titleResult = await generateText({
-							model: openrouter(modelName),
-							prompt: titlePrompt,
-						});
-						const generatedTitle = titleResult.text.trim();
-
-						await db
-							.update(schema.conversations)
-							.set({ title: generatedTitle, updatedAt: sql`NOW()` })
-							.where(eq(schema.conversations.id, conversationId));
-					} catch (err) {
-						console.error("Error generating/updating conversation title:", err);
-					}
 				} catch (err) {
-					console.error("Error updating final assistant message:", err);
+					console.error("Error generating/updating conversation title:", err);
 				}
-			},
-			onError({ error: streamError }) {
-				console.error("Stream error:", streamError);
-				c.json(
-					{ error: "Message generation failed. Please try again later." },
-					500,
-				);
-			},
-		});
-		reader = result.textStream.getReader();
-	} catch (error) {
-		if (TypeValidationError.isInstance(error)) {
-			console.error(error);
-			c.json({ error: "Message quota exceeded. Please try again later." }, 500);
-		}
-	}
+			} catch (err) {
+				console.error("Error updating final assistant message:", err);
+			}
+		},
+		onError({ error: streamError }) {
+			console.error("Stream error:", streamError);
+			c.json(
+				{ error: "Message generation failed. Please try again later." },
+				500,
+			);
+		},
+	});
 
 	(async () => {
-		if (!reader) return;
-		let chunkIndex = 0;
-		while (true) {
-			const { done, value } = await reader.read();
-			const textChunk = value ?? "";
-			await db
-				.insert(schema.messageChunks)
-				.values({
-					messageId: assistantMessageId,
-					chunkIndex,
-					content: textChunk,
-				})
-				.catch((err) => console.error("Error inserting message chunk:", err));
-
-			chunkIndex++;
-
-			if (done) {
+		try {
+			const reader = result.textStream.getReader();
+			if (!reader) return;
+			let chunkIndex = 0;
+			while (true) {
+				const { done, value } = await reader.read();
+				const textChunk = value ?? "";
 				await db
-					.delete(schema.messageChunks)
-					.where(eq(schema.messageChunks.messageId, assistantMessageId));
-				break;
+					.insert(schema.messageChunks)
+					.values({
+						messageId: assistantMessageId,
+						chunkIndex,
+						content: textChunk,
+					})
+					.catch((err) => console.error("Error inserting message chunk:", err));
+	
+				chunkIndex++;
+	
+				if (done) {
+					await db
+						.delete(schema.messageChunks)
+						.where(eq(schema.messageChunks.messageId, assistantMessageId));
+					break;
+				}
+			}
+		} catch (error) {
+			if (TypeValidationError.isInstance(error)) {
+				console.error("Type validation error:", error.message);
+				console.error("Error details:", error.cause);
 			}
 		}
 	})().catch((err) => console.error("Stream processing error:", err));
