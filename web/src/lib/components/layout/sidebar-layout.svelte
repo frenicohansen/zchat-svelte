@@ -41,7 +41,7 @@
     class='select-none'
   />
   <Sidebar.Inset>
-    <header class='flex h-16 shrink-0 items-center gap-2 sticky top-0 bg-background z-50'>
+    <header class='flex h-16 shrink-0 items-center gap-2'>
       <div class='flex flex-1 items-center justify-between px-4'>
         <div class='flex items-center gap-2'>
           <Sidebar.Trigger class='-ml-1' />
@@ -87,8 +87,8 @@
         </div>
       </div>
     </header>
-    <main class='h-full overflow-hidden'>
+    <div class='h-full overflow-hidden'>
       {@render children?.()}
-    </main>
+    </div>
   </Sidebar.Inset>
 </Sidebar.Provider>
