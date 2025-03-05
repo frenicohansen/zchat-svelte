@@ -28,7 +28,12 @@
 </script>
 
 <Sidebar.Provider class='h-screen'>
-  <AppSidebar variant='inset' conversations={conversations.current} conversation={conversation} />
+  <AppSidebar
+    variant='inset'
+    conversations={conversations.current}
+    conversation={conversation}
+    class='select-none'
+  />
   <Sidebar.Inset>
     <header class='flex h-16 shrink-0 items-center gap-2 sticky top-0 bg-background z-50'>
       <div class='flex flex-1 items-center justify-between px-4'>

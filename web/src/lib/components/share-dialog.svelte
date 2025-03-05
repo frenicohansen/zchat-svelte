@@ -57,7 +57,7 @@
       {/snippet}
     </Dialog.Trigger>
     <Dialog.Content class='sm:max-w-md'>
-      <Dialog.Header>
+      <Dialog.Header class='select-none'>
         <Dialog.Title>Share conversation</Dialog.Title>
         <Dialog.Description>
           Anyone with the link can access this conversation based on the permission you set.
@@ -78,7 +78,7 @@
             <span class='sr-only'>Copy link</span>
           </Button>
         </div>
-        <div class='grid gap-4'>
+        <div class='grid gap-4 select-none'>
           <Label>Who can access this conversation?</Label>
           <RadioGroup.Root value={conversationAccessLevel ?? 'private'} onValueChange={value => shareOption = value as ShareOption} class='grid gap-3'>
             <Label

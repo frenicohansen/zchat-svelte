@@ -42,7 +42,7 @@
       <Sidebar.MenuItem>
         <Sidebar.MenuButton>
           {#snippet child({ props })}
-            <a href='/chat' {...props}>
+            <a href='/chat' draggable='false' {...props}>
               <MessageSquarePlus class='mr-2 h-4 w-4' />
               <span>New Chat</span>
             </a>
@@ -80,7 +80,7 @@
                   <div class='flex w-full items-center'>
                     <Sidebar.MenuButton isActive={personalConversation.id === conversation?.id}>
                       {#snippet child({ props })}
-                        <a href={`/chat/${personalConversation.id}`} {...props}>
+                        <a href={`/chat/${personalConversation.id}`} draggable='false' {...props}>
                           <Bot class='mr-2 h-4 w-4' />
                           <span class='truncate'>{personalConversation.title}</span>
                         </a>
