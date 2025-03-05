@@ -59,6 +59,12 @@ export default $config({
 				context: ".",
 				dockerfile: "./Dockerfile.api",
 			},
+			health: {
+				command: ["CMD-SHELL", "wget -nv -t1 --spider http://localhost:3000/health || exit 1"],
+				interval: "5 seconds",
+				retries: 3,
+				startPeriod: "300 seconds",
+			},
 			loadBalancer: {
 				public: true,
 				domain: {
