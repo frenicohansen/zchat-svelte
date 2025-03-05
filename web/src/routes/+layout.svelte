@@ -6,6 +6,10 @@
   const { children } = $props()
 </script>
 
+<svelte:head>
+  <title>Zero Chat</title>
+</svelte:head>
+
 <Toaster />
 <ModeWatcher />
 {@render children?.()}
