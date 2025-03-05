@@ -32,8 +32,8 @@
 <AlertDialog.Root bind:open={show}>
   <AlertDialog.Trigger onclick={() => show = true}>
     {#snippet child({ props })}
-      <Sidebar.MenuAction {...props}>
-        <X class='size-3 text-sidebar-foreground' />
+      <Sidebar.MenuAction class='hidden group-hover/menu-item:flex' {...props}>
+        <X class='size-4 text-sidebar-foreground' />
         <span class='sr-only'>Delete</span>
       </Sidebar.MenuAction>
     {/snippet}
