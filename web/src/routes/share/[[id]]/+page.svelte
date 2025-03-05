@@ -16,7 +16,7 @@
     conversationId.value = page.params.id
     const isOwner = conversationSignal.data?.userId === z.current.userID
     const isPublicWrite = conversationSignal.data?.accessLevel === 'public_write'
-    
+
     if (isOwner || isPublicWrite) {
       goto(`/chat/${page.params.id}`)
     }
@@ -35,19 +35,35 @@
         {#if streaming.messages && streaming.messages.length > 0}
           {#each streaming.messages as message (message.id)}
             {#if message.sender === 'assistant'}
-              <div class='flex justify-start w-full max-w-4xl'>
-                <div class='rounded-lg px-4 py-2 max-w-[80%] bg-muted/50 backdrop-blur-sm prose'>
-                  {/* @ts-ignore */ null}
-                  <!-- eslint-disable-next-line svelte/no-at-html-tags -->
-                  {@html DOMPurify.sanitize(marked.parse(message.finalText.length ? message.finalText : '...'))}
+              <div class='flex justify-start w-full max-w-4xl ai-message'>
+                <div
+                  class='rounded-lg px-4 py-2 max-w-[80%] bg-muted/50 text-foreground backdrop-blur-sm prose'
+                >
+                  {#if message.finalText?.length === 0}
+                    <div
+                      class='animate-pulse inline-block size-1 bg-gray-400 rounded-full mr-0.5'
+                    ></div>
+                    <div
+                      class='animate-pulse inline-block size-1 bg-gray-400 rounded-full mr-0.5'
+                      style='animation-delay: 0.2s'
+                    ></div>
+                    <div
+                      class='animate-pulse inline-block size-1 bg-gray-400 rounded-full'
+                      style='animation-delay: 0.4s'
+                    ></div>
+                  {:else}
+                    {/* @ts-ignore */ null}
+                    <!-- eslint-disable-next-line svelte/no-at-html-tags -->
+                    {@html DOMPurify.sanitize(marked.parse(message.finalText.length ? message.finalText : '...'))}
+                  {/if}
                 </div>
               </div>
             {:else if message.sender === 'user'}
               <div class='flex justify-end w-full max-w-4xl'>
-                <div class='rounded-lg px-4 py-2 max-w-[80%] bg-primary text-primary-foreground prose'>
-                  {/* @ts-ignore */ null}
-                  <!-- eslint-disable-next-line svelte/no-at-html-tags -->
-                  {@html DOMPurify.sanitize(marked.parse(message.finalText ?? ''))}
+                <div
+                  class='rounded-lg px-4 py-2 max-w-[80%] bg-primary text-primary-foreground prose'
+                >
+                  {message.finalText}
                 </div>
               </div>
             {/if}
@@ -55,11 +71,15 @@
         {:else}
           <div class='flex h-full items-center justify-center'>
             <div class='text-center'>
-              <div class='inline-flex h-12 w-12 items-center justify-center rounded-full bg-primary/10 mb-4'>
+              <div
+                class='inline-flex h-12 w-12 items-center justify-center rounded-full bg-primary/10 mb-4'
+              >
                 <Bot class='h-6 w-6 text-primary' />
               </div>
               <h3 class='text-lg font-semibold'>Welcome to ZChat</h3>
-              <p class='text-muted-foreground'>Start a conversation by typing a message below.</p>
+              <p class='text-muted-foreground'>
+                Start a conversation by typing a message below.
+              </p>
             </div>
           </div>
         {/if}
@@ -67,3 +87,11 @@
     </ScrollArea>
   </div>
 </ShareLayout>
+
+<style>
+  .ai-message {
+    :global(h1, h2, h3, h4, h5, h6, strong) {
+      @apply text-foreground;
+    }
+  }
+</style>
