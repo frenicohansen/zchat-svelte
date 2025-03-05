@@ -1,8 +1,13 @@
 # Demo
 https://chat.z.kohans.de
 
-# Development Guide
+# Notes
+Every time a user sends a prompt in a conversation, all past messages are automatically included to provide context for the AI. As a result:
+- Token usage increases with each message in the conversation
+- Response times may become longer as the AI processes larger context
+- The AI maintains conversation coherency through accumulated context
 
+# Development Guide
 ## Prerequisites
 - Docker installed
 - Bun installed
