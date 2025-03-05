@@ -1,7 +1,6 @@
 /// <reference path="./.sst/platform/config.d.ts" />
 
 import { join } from "node:path";
-import { local } from "@pulumi/command";
 
 export default $config({
 	app(input) {
@@ -10,7 +9,7 @@ export default $config({
 			removal: input?.stage === "production" ? "retain" : "remove",
 			home: "aws",
 			region: process.env.AWS_REGION || "eu-central-1",
-			providers: { cloudflare: "5.49.1" },
+			providers: { cloudflare: "5.49.1", command: "1.0.2" },
 		};
 	},
 	async run() {
@@ -60,7 +59,10 @@ export default $config({
 				dockerfile: "./Dockerfile.api",
 			},
 			health: {
-				command: ["CMD-SHELL", "wget -nv -t1 --spider http://localhost:3000/health || exit 1"],
+				command: [
+					"CMD-SHELL",
+					"wget -nv -t1 --spider http://localhost:3000/health || exit 1",
+				],
 				interval: "5 seconds",
 				retries: 3,
 				startPeriod: "300 seconds",
@@ -69,7 +71,9 @@ export default $config({
 				public: true,
 				domain: {
 					name: process.env.BACKEND_DOMAIN ?? "",
-					dns: sst.cloudflare.dns(),
+					dns: sst.cloudflare.dns({
+						proxy: true,
+					}),
 				},
 				ports: [
 					{ listen: "80/http", forward: "3000/http" },
@@ -152,7 +156,9 @@ export default $config({
 				public: true,
 				domain: {
 					name: process.env.ZERO_DOMAIN ?? "",
-					dns: sst.cloudflare.dns(),
+					dns: sst.cloudflare.dns({
+						proxy: true,
+					}),
 				},
 				rules: [
 					{ listen: "80/http", forward: "4848/http" },
@@ -180,7 +186,7 @@ export default $config({
 		});
 
 		// Permissions deployment
-		new local.Command(
+		new command.local.Command(
 			"zero-deploy-permissions",
 			{
 				// Pulumi operates with cwd at the package root.
@@ -199,7 +205,9 @@ export default $config({
 		new sst.aws.StaticSite("web-frontend", {
 			domain: {
 				name: process.env.FRONTEND_DOMAIN ?? "",
-				dns: sst.cloudflare.dns(),
+				dns: sst.cloudflare.dns({
+					proxy: true,
+				}),
 			},
 			build: {
 				command: "bun run build",
