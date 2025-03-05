@@ -1,5 +1,5 @@
 # Demo
-https://chat.z.kohans.de
+https://chatz.kohans.de
 
 # Notes
 Every time a user sends a prompt in a conversation, all past messages are automatically included to provide context for the AI. As a result:
