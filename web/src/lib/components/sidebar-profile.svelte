@@ -1,6 +1,7 @@
 <script lang='ts'>
   import { goto } from '$app/navigation'
   import { authClient } from '$lib/auth-client'
+  import ThemeToggle from '$lib/components/theme-toggle.svelte'
   import * as Avatar from '$lib/components/ui/avatar'
   import { Button } from '$lib/components/ui/button'
   import { db } from '$lib/db/dexie'
@@ -32,6 +33,7 @@
     </div>
   {/await}
   <div class='flex items-center relative'>
+    <ThemeToggle />
     <Button variant='ghost' class='size-6' onclick={handleSignOut}>
       <LogOut class='size-4' />
       <span class='sr-only'>Log out</span>
