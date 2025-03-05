@@ -44,7 +44,7 @@ export default $config({
 
 		const backendEnv = {
 			BETTER_AUTH_URL: `https://${process.env.BACKEND_DOMAIN}`,
-			BETTER_AUTH_SECRET: process.env.AUTH_SECRET ?? "",
+			BETTER_AUTH_SECRET: process.env.BETTER_AUTH_SECRET ?? "",
 			GITHUB_CLIENT_ID: process.env.GITHUB_CLIENT_ID ?? "",
 			GITHUB_CLIENT_SECRET: process.env.GITHUB_CLIENT_SECRET ?? "",
 			OPENAI_API_KEY: process.env.OPENAI_API_KEY ?? "",

@@ -16,7 +16,7 @@ Every time a user sends a prompt in a conversation, all past messages are automa
 
 1. **Environment Setup**
   - Clone the repository
-  - Copy `.env.local.example` to `.env`
+  - Copy `.env.example` to `.env`
   - Configure environment variables in `.env`
 
 2. **Install Dependencies**
