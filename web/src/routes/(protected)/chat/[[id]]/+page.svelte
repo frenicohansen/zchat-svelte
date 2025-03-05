@@ -54,9 +54,23 @@
                 <div
                   class='rounded-lg px-4 py-2 max-w-[80%] bg-muted/50 text-foreground backdrop-blur-sm prose'
                 >
-                  {/* @ts-ignore */ null}
-                  <!-- eslint-disable-next-line svelte/no-at-html-tags -->
-                  {@html DOMPurify.sanitize(marked.parse(message.finalText.length ? message.finalText : '...'))}
+                  {#if message.finalText?.length === 0}
+                    <div
+                      class='animate-pulse inline-block size-1 bg-gray-400 rounded-full mr-0.5'
+                    ></div>
+                    <div
+                      class='animate-pulse inline-block size-1 bg-gray-400 rounded-full mr-0.5'
+                      style='animation-delay: 0.2s'
+                    ></div>
+                    <div
+                      class='animate-pulse inline-block size-1 bg-gray-400 rounded-full'
+                      style='animation-delay: 0.4s'
+                    ></div>
+                  {:else}
+                    {/* @ts-ignore */ null}
+                    <!-- eslint-disable-next-line svelte/no-at-html-tags -->
+                    {@html DOMPurify.sanitize(marked.parse(message.finalText.length ? message.finalText : '...'))}
+                  {/if}
                 </div>
               </div>
             {:else if message.sender === 'user'}
