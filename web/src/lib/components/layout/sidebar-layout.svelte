@@ -3,12 +3,15 @@
   import type { Snippet } from 'svelte'
   import AppSidebar from '$lib/components/app-sidebar.svelte'
   import ShareDialog from '$lib/components/share-dialog.svelte'
+  import { Button } from '$lib/components/ui/button'
   import { Label } from '$lib/components/ui/label'
+  import * as Popover from '$lib/components/ui/popover'
   import * as Select from '$lib/components/ui/select'
   import { Separator } from '$lib/components/ui/separator'
   import * as Sidebar from '$lib/components/ui/sidebar'
   import { Switch } from '$lib/components/ui/switch'
   import { z } from '$lib/zero'
+  import Settings from 'lucide-svelte/icons/settings'
   import { Query } from 'zero-svelte'
 
   const aiModels = [
@@ -73,16 +76,39 @@
           </Select.Root>
         </div>
         <div class='flex items-center gap-3'>
-          <div class='flex items-center gap-2 bg-muted/30 px-2 py-1 rounded-md'>
-            <Label for='follow-messages' class='text-xs text-muted-foreground select-none'>
-              Auto-scroll
-            </Label>
-            <Switch
-              id='follow-messages'
-              checked={followMessage}
-              onCheckedChange={() => followMessage = !followMessage}
-            />
-          </div>
+          <Popover.Root>
+            <Popover.Trigger>
+              {#snippet child({ props })}
+                <Button variant='outline' size='icon' class='h-8 w-8' {...props}>
+                  <Settings class='h-4 w-4' />
+                  <span class='sr-only'>Settings</span>
+                </Button>
+              {/snippet}
+            </Popover.Trigger>
+            <Popover.Content class='w-80' align='end'>
+              <div class='grid gap-4'>
+                <div class='space-y-2'>
+                  <h4 class='font-medium leading-none'>Chat Settings</h4>
+                  <p class='text-sm text-muted-foreground'>Configure your experience preferences.</p>
+                </div>
+                <div class='grid gap-2'>
+                  <div class='flex items-center justify-between'>
+                    <Label for='follow-messages' class='flex flex-col gap-1'>
+                      <span>Auto-scroll</span>
+                      <span class='font-normal text-xs text-muted-foreground'>
+                        Scroll to new messages when they arrive.
+                      </span>
+                    </Label>
+                    <Switch
+                      id='follow-messages'
+                      checked={followMessage}
+                      onCheckedChange={() => followMessage = !followMessage}
+                    />
+                  </div>
+                </div>
+              </div>
+            </Popover.Content>
+          </Popover.Root>
           <ShareDialog conversation={conversation} />
         </div>
       </div>
