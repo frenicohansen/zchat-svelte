@@ -115,7 +115,7 @@
         {#if streaming.messages && streaming.messages.length > 0}
           {#each streaming.messages as message (message.id)}
             {#if message.sender === 'assistant'}
-              <div class='flex justify-start w-full max-w-4xl ai-message'>
+              <div class='flex justify-start w-full max-w-4xl px-8 lg:px-0 ai-message'>
                 <div
                   class='rounded-lg px-4 py-2 max-w-[80%] bg-muted/50 text-foreground backdrop-blur-sm prose'
                 >
@@ -144,7 +144,7 @@
                 </div>
               </div>
             {:else if message.sender === 'user'}
-              <div class='flex justify-end w-full max-w-4xl'>
+              <div class='flex justify-end w-full max-w-4xl px-8 lg:px-0'>
                 <div
                   class='rounded-lg px-4 py-2 max-w-[80%] bg-primary text-primary-foreground prose'
                 >
@@ -171,7 +171,7 @@
       </div>
     </ScrollArea>
     <div
-      class='flex w-full max-w-4xl bg-background flex-col items-center justify-end rounded-t-lg pb-4'
+      class='flex w-full max-w-4xl bg-background flex-col items-center justify-end rounded-t-lg pb-4 px-8 lg:px-0'
     >
       <form
         class='focus-within:border-ring/20 flex relative w-full flex-wrap items-end rounded-lg border px-2.5 shadow-sm transition-colors ease-in'
