@@ -49,7 +49,7 @@
         <div class='flex items-center gap-2'>
           <Sidebar.Trigger class='-ml-1' />
           <Separator orientation='vertical' class='mr-2 h-4' />
-          <div class='flex-1 mr-4'>
+          <div class='hidden mr-4 md:flex'>
             <h1 class='text-lg'>
               {conversation?.title || 'Chat'}
             </h1>
