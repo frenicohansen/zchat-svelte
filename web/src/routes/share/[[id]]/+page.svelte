@@ -25,7 +25,9 @@
 </script>
 
 <svelte:head>
-  <title>Zero Chat - Offline First ChatGPT</title>
+  <title>
+    {conversationSignal.data?.title ?? 'Zero Chat - Offline First ChatGPT'}
+  </title>
 </svelte:head>
 
 <ShareLayout conversation={conversationSignal.data}>

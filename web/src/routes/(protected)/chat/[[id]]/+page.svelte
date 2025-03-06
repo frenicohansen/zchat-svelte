@@ -102,6 +102,12 @@
   }
 </script>
 
+<svelte:head>
+  <title>
+    {conversationSignal.data?.title ?? 'Zero Chat - Offline First ChatGPT'}
+  </title>
+</svelte:head>
+
 <SidebarLayout conversation={conversationSignal.data} bind:followMessage>
   <div class='flex flex-col items-center h-full'>
     <ScrollArea
