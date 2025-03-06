@@ -32,59 +32,56 @@
   })
 
   let scrollContainerRef = $state<HTMLDivElement | null>(null)
-  let followMessage = $state(false)
-  let isAtBottom = $state(false)
-  let lastScrollTop = $state(0)
-  let isScrollingUp = $state(false)
+  let followMessage = $state(true)
+  let showScrollButton = $state(false)
 
-  function calculateIsAtBottom(scrollContainerRef: HTMLDivElement) {
+  function isBottom(scrollContainerRef: HTMLDivElement) {
     const threshold = 100
     return (scrollContainerRef.scrollHeight - scrollContainerRef.scrollTop - scrollContainerRef.clientHeight) < threshold
   }
 
   function handleScroll() {
     if (!scrollContainerRef)
-      return true
-    isAtBottom = calculateIsAtBottom(scrollContainerRef)
+      return
 
-    isScrollingUp = scrollContainerRef.scrollTop < lastScrollTop
-    lastScrollTop = scrollContainerRef.scrollTop
+    showScrollButton = !isBottom(scrollContainerRef)
   }
 
   function scrollToBottom() {
     if (!scrollContainerRef)
       return
+
     scrollContainerRef.scrollTo({
       top: scrollContainerRef.scrollHeight,
       behavior: 'smooth',
     })
+
+    showScrollButton = false
   }
 
+  // Auto scroll requirements
+  // v 1. When user first open a conversation, scroll to bottom
+  // v 2. When user sends a message, scroll to bottom once after message is sent
+  // v 3. When option enabled, follow message, scroll to bottom when new message is received
+  // 4. When user scrolls up, disable follow message, only follow message aagain when user is at bottom
+  // v 5. When user is not at bottom, show scroll to bottom button, else hide it
+
   $effect(() => {
-    const isNew = !conversationId.value
-    if (isNew) {
-      isAtBottom = true
-    }
-    else {
-      const messages = streaming.messages
-      tick().then(() => {
-        if (scrollContainerRef && messages.length)
-          isAtBottom = calculateIsAtBottom(scrollContainerRef)
-      })
-    }
+    const conversationId = page.params.id
+    tick().then(() => {
+      if (conversationId) {
+        scrollToBottom()
+      }
+    })
   })
 
   $effect(() => {
-    const messages = streaming.messages
-    if (!messages.length)
-      return
-
-    const lastMessage = messages[messages.length - 1]
+    const lastMessage = streaming.messages[streaming.messages.length - 1]
     const lastMessageByUser = lastMessage && lastMessage.sender === 'user'
-    const atBottomNotScrollingUp = isAtBottom && !isScrollingUp
-
-    if ((followMessage && atBottomNotScrollingUp) || lastMessageByUser) {
-      scrollToBottom()
+    if (lastMessageByUser || followMessage) {
+      tick().then(() => {
+        scrollToBottom()
+      })
     }
   })
 
@@ -173,7 +170,7 @@
         class='focus-within:border-ring/20 flex relative w-full flex-wrap items-end rounded-lg border px-2.5 shadow-sm transition-colors ease-in'
         onsubmit={streaming.handleSubmit}
       >
-        <ScrollToBottom visible={!isAtBottom} scrollToBottom={scrollToBottom} />
+        <ScrollToBottom visible={showScrollButton} scrollToBottom={scrollToBottom} />
         <textarea
           class='bg-background placeholder:text-muted-foreground resize-none flex min-h-28 outline-none flex-grow px-3 py-4 text-base disabled:cursor-not-allowed disabled:opacity-50 md:text-sm max-h-40'
           placeholder='Write a message...'
