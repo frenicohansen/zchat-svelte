@@ -15,25 +15,16 @@
   import { Bot } from 'lucide-svelte'
   import SendHorizontal from 'lucide-svelte/icons/send-horizontal'
   import { marked } from 'marked'
-  import { tick } from 'svelte'
+  import { tick, untrack } from 'svelte'
 
   const conversationSignal = useCurrentConversation()
   const streaming = useStreamingMessages()
 
-  $effect(() => {
-    conversationId.value = page.params.id
-
-    const isOwner = conversationSignal.data?.userId === z.current.userID
-    const isPublicRead = conversationSignal.data?.accessLevel === 'public_read'
-
-    if (!isOwner && isPublicRead) {
-      goto(`/share/${page.params.id}`)
-    }
-  })
-
   let scrollContainerRef = $state<HTMLDivElement | null>(null)
   let followMessage = $state(true)
   let showScrollButton = $state(false)
+  let isScrollingUp = $state(false)
+  let lastScrollTop = $state(0)
 
   function isBottom(scrollContainerRef: HTMLDivElement) {
     const threshold = 100
@@ -45,6 +36,8 @@
       return
 
     showScrollButton = !isBottom(scrollContainerRef)
+    isScrollingUp = scrollContainerRef.scrollTop < lastScrollTop
+    lastScrollTop = scrollContainerRef.scrollTop
   }
 
   function scrollToBottom() {
@@ -59,6 +52,27 @@
     showScrollButton = false
   }
 
+  $effect(() => {
+    conversationId.value = page.params.id
+
+    const isOwner = conversationSignal.data?.userId === z.current.userID
+    const isPublicRead = conversationSignal.data?.accessLevel === 'public_read'
+
+    if (!isOwner && isPublicRead) {
+      goto(`/share/${page.params.id}`)
+    }
+
+    isScrollingUp = false
+    lastScrollTop = 0
+    showScrollButton = false
+
+    tick().then(() => {
+      if (page.params.id) {
+        scrollToBottom()
+      }
+    })
+  })
+
   // Auto scroll requirements
   // v 1. When user first open a conversation, scroll to bottom
   // v 2. When user sends a message, scroll to bottom once after message is sent
@@ -67,18 +81,11 @@
   // v 5. When user is not at bottom, show scroll to bottom button, else hide it
 
   $effect(() => {
-    const conversationId = page.params.id
-    tick().then(() => {
-      if (conversationId) {
-        scrollToBottom()
-      }
-    })
-  })
-
-  $effect(() => {
     const lastMessage = streaming.messages[streaming.messages.length - 1]
     const lastMessageByUser = lastMessage && lastMessage.sender === 'user'
-    if (lastMessageByUser || followMessage) {
+    const isScrollingUpUntrack = untrack(() => isScrollingUp)
+
+    if (lastMessageByUser || (followMessage && !isScrollingUpUntrack && scrollContainerRef && isBottom(scrollContainerRef))) {
       tick().then(() => {
         scrollToBottom()
       })
