@@ -206,7 +206,7 @@ export default $config({
 			domain: {
 				name: process.env.FRONTEND_DOMAIN ?? "",
 				dns: sst.cloudflare.dns({
-					proxy: true,
+					proxy: false, // somehow can't be proxied
 				}),
 			},
 			build: {
