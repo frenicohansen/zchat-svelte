@@ -25,9 +25,15 @@
   interface SidebarLayoutProps {
     conversation: Conversation | null
     followMessage?: boolean
+    sendOnEnter?: boolean
     children?: Snippet
   }
-  let { conversation, followMessage = $bindable(false), children }: SidebarLayoutProps = $props()
+  let {
+    conversation,
+    followMessage = $bindable(false),
+    sendOnEnter = $bindable(true),
+    children,
+  }: SidebarLayoutProps = $props()
 
   let value = $state('gemini-2.0-flash')
 
@@ -86,24 +92,39 @@
               {/snippet}
             </Popover.Trigger>
             <Popover.Content class='w-80' align='end'>
-              <div class='grid gap-4'>
+              <div class='space-y-4'>
                 <div class='space-y-2'>
                   <h4 class='font-medium leading-none'>Chat Settings</h4>
-                  <p class='text-sm text-muted-foreground'>Configure your experience preferences.</p>
+                  <p class='text-sm text-muted-foreground'>Configure your chat experience preferences.</p>
                 </div>
-                <div class='grid gap-2'>
-                  <div class='flex items-center justify-between'>
-                    <Label for='follow-messages' class='flex flex-col gap-1'>
-                      <span>Auto-scroll</span>
+                <Separator />
+                <div class='space-y-4'>
+                  <div class='flex items-center justify-between space-y-0'>
+                    <div class='flex flex-col gap-1'>
+                      <Label for='follow-messages' class='text-sm'>
+                        Auto-scroll
+                      </Label>
                       <span class='font-normal text-xs text-muted-foreground'>
                         Scroll to new messages when they arrive.
                       </span>
-                    </Label>
+                    </div>
                     <Switch
                       id='follow-messages'
                       checked={followMessage}
                       onCheckedChange={() => followMessage = !followMessage}
                     />
+                  </div>
+                  <Separator />
+                  <div class='flex items-center justify-between space-y-0'>
+                    <div class='flex flex-col gap-1'>
+                      <Label for='send-on-enter' class='text-sm'>
+                        Send on Enter
+                      </Label>
+                      <span class='font-normal text-xs text-muted-foreground'>
+                        Enter to send messages.
+                      </span>
+                    </div>
+                    <Switch id='send-on-enter' checked={sendOnEnter} onCheckedChange={() => sendOnEnter = !sendOnEnter} />
                   </div>
                 </div>
               </div>

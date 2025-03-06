@@ -60,16 +60,18 @@
                   {:else}
                     {/* @ts-ignore */ null}
                     <!-- eslint-disable-next-line svelte/no-at-html-tags -->
-                    {@html DOMPurify.sanitize(marked.parse(message.finalText.length ? message.finalText : '...'))}
+                    {@html DOMPurify.sanitize(marked.parse(message.finalText))}
                   {/if}
                 </div>
               </div>
             {:else if message.sender === 'user'}
               <div class='flex justify-end w-full max-w-4xl px-8 lg:px-0'>
                 <div
-                  class='rounded-lg px-4 py-2 max-w-[80%] bg-primary text-primary-foreground prose'
+                  class='rounded-lg px-4 py-2 max-w-[80%] bg-primary text-primary-foreground prose user-message'
                 >
-                  {message.finalText}
+                  {/* @ts-ignore */ null}
+                  <!-- eslint-disable-next-line svelte/no-at-html-tags -->
+                  {@html DOMPurify.sanitize(marked.parse(message.finalText))}
                 </div>
               </div>
             {/if}
@@ -98,6 +100,11 @@
   .ai-message {
     :global(h1, h2, h3, h4, h5, h6, strong) {
       @apply text-foreground;
+    }
+  }
+  .user-message {
+    :global(h1, h2, h3, h4, h5, h6, strong) {
+      @apply text-primary-foreground;
     }
   }
 </style>
