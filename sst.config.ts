@@ -46,7 +46,7 @@ export default $config({
 			BETTER_AUTH_SECRET: process.env.BETTER_AUTH_SECRET ?? "",
 			GITHUB_CLIENT_ID: process.env.GITHUB_CLIENT_ID ?? "",
 			GITHUB_CLIENT_SECRET: process.env.GITHUB_CLIENT_SECRET ?? "",
-			OPENAI_API_KEY: process.env.OPENAI_API_KEY ?? "",
+			OPENROUTER_API_KEY: process.env.OPENROUTER_API_KEY ?? "",
 			AI_MODEL_NAME: process.env.AI_MODEL_NAME ?? "",
 			PUBLIC_FRONTEND_URL: `https://${process.env.FRONTEND_DOMAIN}`,
 		};

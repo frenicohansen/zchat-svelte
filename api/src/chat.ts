@@ -124,7 +124,7 @@ app.post("/", async (c) => {
 	}
 
 	const openrouter = createOpenRouter({
-		apiKey: process.env.OPENAI_API_KEY ?? "",
+		apiKey: process.env.OPENROUTER_API_KEY ?? "",
 	});
 
 	const result = streamText({
