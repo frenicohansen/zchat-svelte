@@ -64,20 +64,22 @@
         </Dialog.Description>
       </Dialog.Header>
       <div class='flex flex-col gap-4 py-4'>
-        <div class='flex items-center gap-4'>
-          <div class='grid flex-1 gap-1.5'>
-            <Label for='link' class='sr-only'>Link</Label>
-            <Input id='link' readonly value={shareUrl} class='h-9 border-dashed' />
+        {#if conversationAccessLevel && ['public_read', 'public_write'].includes(conversationAccessLevel)}
+          <div class='flex items-center gap-4'>
+            <div class='grid flex-1 gap-1.5'>
+              <Label for='link' class='sr-only'>Link</Label>
+              <Input id='link' readonly value={shareUrl} class='h-9 border-dashed' />
+            </div>
+            <Button variant='outline' size='icon' class='h-9 w-9' onclick={handleCopy}>
+              {#if copied}
+                <Check class='h-4 w-4' />
+              {:else}
+                <Copy class='h-4 w-4' />
+              {/if}
+              <span class='sr-only'>Copy link</span>
+            </Button>
           </div>
-          <Button variant='outline' size='icon' class='h-9 w-9' onclick={handleCopy}>
-            {#if copied}
-              <Check class='h-4 w-4' />
-            {:else}
-              <Copy class='h-4 w-4' />
-            {/if}
-            <span class='sr-only'>Copy link</span>
-          </Button>
-        </div>
+        {/if}
         <div class='grid gap-4 select-none'>
           <Label>Who can access this conversation?</Label>
           <RadioGroup.Root value={conversationAccessLevel ?? 'private'} onValueChange={value => shareOption = value as ShareOption} class='grid gap-3'>
@@ -120,14 +122,6 @@
         </div>
       </div>
       <Dialog.Footer class='gap-2 sm:gap-0'>
-        <Button variant='secondary' onclick={handleCopy} class='w-full sm:w-auto'>
-          {#if copied}
-            <Check class='mr-2 h-4 w-4' />
-          {:else}
-            <Copy class='mr-2 h-4 w-4' />
-          {/if}
-          Copy link
-        </Button>
         <Button onclick={handleShare} class='w-full sm:w-auto'>
           Update sharing settings
         </Button>
