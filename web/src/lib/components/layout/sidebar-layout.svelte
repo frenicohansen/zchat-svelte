@@ -42,14 +42,14 @@
   )
 </script>
 
-<Sidebar.Provider class='h-screen'>
+<Sidebar.Provider class='h-svh'>
   <AppSidebar
     variant='inset'
     conversations={conversations.current}
     conversation={conversation}
     class='select-none'
   />
-  <Sidebar.Inset>
+  <Sidebar.Inset class='overflow-auto'>
     <header class='flex h-16 shrink-0 items-center gap-2'>
       <div class='flex flex-1 items-center justify-between px-4'>
         <div class='flex items-center gap-2'>
@@ -134,7 +134,7 @@
         </div>
       </div>
     </header>
-    <div class='h-full overflow-hidden'>
+    <div class='h-full overflow-auto'>
       {@render children?.()}
     </div>
   </Sidebar.Inset>

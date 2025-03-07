@@ -37,7 +37,7 @@
         {#if streaming.messages && streaming.messages.length > 0}
           {#each streaming.messages as message (message.id)}
             {#if message.sender === 'assistant'}
-              <div class='flex justify-start w-full max-w-4xl px-8 lg:px-0 ai-message'>
+              <div class='flex justify-start w-full max-w-4xl px-8 lg:px-4 ai-message'>
                 <div
                   class='rounded-lg px-4 py-2 max-w-[80%] bg-muted/50 text-foreground backdrop-blur-sm prose'
                 >
@@ -65,7 +65,7 @@
                 </div>
               </div>
             {:else if message.sender === 'user'}
-              <div class='flex justify-end w-full max-w-4xl px-8 lg:px-0'>
+              <div class='flex justify-end w-full max-w-4xl px-8 lg:px-4'>
                 <div
                   class='rounded-lg px-4 py-2 max-w-[80%] bg-primary text-primary-foreground prose user-message'
                 >
@@ -98,12 +98,12 @@
 
 <style>
   .ai-message {
-    :global(h1, h2, h3, h4, h5, h6, strong) {
+    :global(h1, h2, h3, h4, h5, h6, strong, code) {
       @apply text-foreground;
     }
   }
   .user-message {
-    :global(h1, h2, h3, h4, h5, h6, strong) {
+    :global(h1, h2, h3, h4, h5, h6, strong, code) {
       @apply text-primary-foreground;
     }
   }
