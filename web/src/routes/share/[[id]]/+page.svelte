@@ -32,14 +32,18 @@
 
 <ShareLayout conversation={conversationSignal.data}>
   <div class='flex flex-col items-center h-full '>
-    <ScrollArea type='auto' orientation='vertical' class='size-full'>
+    <ScrollArea
+      type='auto'
+      orientation='vertical'
+      class='size-full'
+    >
       <div class='flex flex-col items-center gap-8 h-full py-8'>
         {#if streaming.messages && streaming.messages.length > 0}
           {#each streaming.messages as message (message.id)}
             {#if message.sender === 'assistant'}
-              <div class='flex justify-start w-full max-w-4xl px-8 lg:px-4 ai-message'>
+              <div class='flex justify-start w-full max-w-4xl px-8 lg:px-4'>
                 <div
-                  class='rounded-lg px-4 py-2 max-w-[80%] bg-muted/50 text-foreground backdrop-blur-sm prose'
+                  class='rounded-lg px-4 py-2 max-w-[80%] bg-muted/50 text-foreground backdrop-blur-sm prose prose-stone dark:prose-invert'
                 >
                   {#if !message.finalText?.length}
                     {#if message.isFinal}
@@ -67,7 +71,7 @@
             {:else if message.sender === 'user'}
               <div class='flex justify-end w-full max-w-4xl px-8 lg:px-4'>
                 <div
-                  class='rounded-lg px-4 py-2 max-w-[80%] bg-primary text-primary-foreground prose user-message'
+                  class='rounded-lg px-4 py-2 max-w-[80%] bg-primary text-primary-foreground prose prose-stone dark:prose-invert'
                 >
                   {/* @ts-ignore */ null}
                   <!-- eslint-disable-next-line svelte/no-at-html-tags -->
@@ -95,16 +99,3 @@
     </ScrollArea>
   </div>
 </ShareLayout>
-
-<style>
-  .ai-message {
-    :global(h1, h2, h3, h4, h5, h6, strong, code) {
-      @apply text-foreground;
-    }
-  }
-  .user-message {
-    :global(h1, h2, h3, h4, h5, h6, strong, code) {
-      @apply text-primary-foreground;
-    }
-  }
-</style>
