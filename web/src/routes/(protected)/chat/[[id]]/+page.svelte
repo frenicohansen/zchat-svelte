@@ -14,10 +14,11 @@
   import { tick, untrack } from 'svelte'
   import { Query } from 'zero-svelte'
 
+  let optimisticConversationIds = $state<string[]>([])
   const conversation = $derived(page.params.id
     ? new Query(z.current.query.conversations.where('id', page.params.id).one())
     : null)
-  const streaming = $derived(useStreamingMessages(page.params.id))
+  const streaming = $derived(useStreamingMessages(page.params.id, body => optimisticConversationIds.push(body.conversationId)))
 
   let sendOnEnter = $state(true)
   let scrollContainerRef = $state<HTMLDivElement | null>(null)
@@ -55,9 +56,17 @@
   $effect(() => {
     const isOwner = conversation?.current?.userId === z.current.userID
     const isPublicRead = conversation?.current?.accessLevel === 'public_read'
+    const optimisticIds = untrack(() => optimisticConversationIds)
+    const inOptimistic = page.params.id && optimisticIds.includes(page.params.id)
 
-    if (!isOwner && isPublicRead) {
+    if (!conversation?.current && !inOptimistic) {
+      goto('/chat')
+    }
+    else if (!isOwner && isPublicRead) {
       goto(`/share/${page.params.id}`)
+    }
+    else if (inOptimistic) {
+      optimisticConversationIds = optimisticIds.filter(id => id !== page.params.id)
     }
 
     isScrollingUp = false

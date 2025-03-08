@@ -4,7 +4,15 @@ import { PUBLIC_BACKEND_URL } from '$env/static/public'
 import { z } from '$lib/zero'
 import { Query } from 'zero-svelte'
 
-export function useStreamingMessages(conversationId: string | undefined) {
+interface ResponseBody {
+  conversationId: string
+  messageId: number
+}
+
+export function useStreamingMessages(
+  conversationId: string | undefined,
+  onResponse?: (body: ResponseBody) => void,
+) {
   let prompt = $state('')
   const handleSubmit = () => {
     if (!prompt.trim())
@@ -23,9 +31,10 @@ export function useStreamingMessages(conversationId: string | undefined) {
       credentials: 'include',
     })
       .then(response => response.json())
-      .then((body) => {
+      .then((body: ResponseBody) => {
         prompt = ''
         if (!conversationId) {
+          onResponse?.(body)
           goto(`/chat/${body.conversationId}`)
         }
       })
