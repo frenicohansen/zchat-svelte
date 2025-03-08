@@ -5,6 +5,7 @@
   import ScrollToBottom from '$lib/components/scroll-to-bottom.svelte'
   import Button from '$lib/components/ui/button/button.svelte'
   import { ScrollArea } from '$lib/components/ui/scroll-area'
+  import { useScrollingChat } from '$lib/hooks/use-scrolling-chat.svelte'
   import { useStreamingMessages } from '$lib/hooks/use-streaming.svelte'
   import { z } from '$lib/zero'
   import DOMPurify from 'dompurify'
@@ -22,36 +23,7 @@
 
   let sendOnEnter = $state(true)
   let scrollContainerRef = $state<HTMLDivElement | null>(null)
-  let followMessage = $state(true)
-  let showScrollButton = $state(false)
-  let isScrollingUp = $state(false)
-  let lastScrollTop = $state(0)
-
-  function isBottom(scrollContainerRef: HTMLDivElement) {
-    const threshold = 100
-    return (scrollContainerRef.scrollHeight - scrollContainerRef.scrollTop - scrollContainerRef.clientHeight) < threshold
-  }
-
-  function handleScroll() {
-    if (!scrollContainerRef)
-      return
-
-    showScrollButton = !isBottom(scrollContainerRef)
-    isScrollingUp = scrollContainerRef.scrollTop < lastScrollTop
-    lastScrollTop = scrollContainerRef.scrollTop
-  }
-
-  function scrollToBottom() {
-    if (!scrollContainerRef)
-      return
-
-    scrollContainerRef.scrollTo({
-      top: scrollContainerRef.scrollHeight,
-      behavior: 'smooth',
-    })
-
-    showScrollButton = false
-  }
+  const scrollingChat = $derived(useScrollingChat(page.params.id, scrollContainerRef))
 
   $effect(() => {
     const isOwner = conversation?.current?.userId === z.current.userID
@@ -69,34 +41,11 @@
       optimisticConversationIds = optimisticIds.filter(id => id !== page.params.id)
     }
 
-    isScrollingUp = false
-    lastScrollTop = 0
-    showScrollButton = false
-
     tick().then(() => {
       if (page.params.id) {
-        scrollToBottom()
+        scrollingChat.scrollToBottom()
       }
     })
-  })
-
-  // Auto scroll requirements
-  // v 1. When user first open a conversation, scroll to bottom
-  // v 2. When user sends a message, scroll to bottom once after message is sent
-  // v 3. When option enabled, follow message, scroll to bottom when new message is received
-  // 4. When user scrolls up, disable follow message, only follow message aagain when user is at bottom
-  // v 5. When user is not at bottom, show scroll to bottom button, else hide it
-
-  $effect(() => {
-    const lastMessage = streaming.messages[streaming.messages.length - 1]
-    const lastMessageByUser = lastMessage && lastMessage.sender === 'user'
-    const isScrollingUpUntrack = untrack(() => isScrollingUp)
-
-    if (lastMessageByUser || (followMessage && !isScrollingUpUntrack && scrollContainerRef && isBottom(scrollContainerRef))) {
-      tick().then(() => {
-        scrollToBottom()
-      })
-    }
   })
 
   function handleTextareaKeydown(e: KeyboardEvent) {
@@ -126,13 +75,13 @@
 
 <SidebarLayout
   conversation={conversation?.current ?? null}
-  bind:followMessage
+  bind:followMessage={scrollingChat.followMessage}
   bind:sendOnEnter
 >
   <div class='flex flex-col items-center h-full'>
     <ScrollArea
       bind:refViewport={scrollContainerRef}
-      onscroll={handleScroll}
+      onscroll={scrollingChat.handleScroll}
       type='auto'
       orientation='vertical'
       class='size-full'
@@ -204,7 +153,10 @@
         class='focus-within:border-ring/20 flex relative w-full flex-wrap items-end rounded-lg border px-2.5 shadow-sm transition-colors ease-in'
         onsubmit={streaming.handleSubmit}
       >
-        <ScrollToBottom visible={showScrollButton} scrollToBottom={scrollToBottom} />
+        <ScrollToBottom
+          visible={scrollingChat.showScrollButton}
+          scrollToBottom={scrollingChat.scrollToBottom}
+        />
         <textarea
           class='bg-background placeholder:text-muted-foreground resize-none flex min-h-28 outline-none flex-grow px-3 py-4 text-base disabled:cursor-not-allowed disabled:opacity-50 md:text-sm max-h-40'
           placeholder='Write a message...'
