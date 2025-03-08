@@ -3,17 +3,16 @@
   import { page } from '$app/state'
   import ShareLayout from '$lib/components/layout/share-layout.svelte'
   import { ScrollArea } from '$lib/components/ui/scroll-area'
-  import { conversationId, useCurrentConversation, useStreamingMessages } from '$lib/hooks/use-conversation.svelte'
+  import { useCurrentConversation, useStreamingMessages } from '$lib/hooks/use-conversation.svelte'
   import { z } from '$lib/zero'
   import DOMPurify from 'dompurify'
   import { Bot } from 'lucide-svelte'
   import { marked } from 'marked'
 
-  const streaming = useStreamingMessages()
-  const conversationSignal = useCurrentConversation()
+  const streaming = $derived(useStreamingMessages(page.params.id))
+  const conversationSignal = $derived(useCurrentConversation(page.params.id))
 
   $effect(() => {
-    conversationId.value = page.params.id
     const isOwner = conversationSignal.data?.userId === z.current.userID
     const isPublicWrite = conversationSignal.data?.accessLevel === 'public_write'
 

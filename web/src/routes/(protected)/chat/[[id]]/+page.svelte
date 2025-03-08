@@ -5,11 +5,7 @@
   import ScrollToBottom from '$lib/components/scroll-to-bottom.svelte'
   import Button from '$lib/components/ui/button/button.svelte'
   import { ScrollArea } from '$lib/components/ui/scroll-area'
-  import {
-    conversationId,
-    useCurrentConversation,
-    useStreamingMessages,
-  } from '$lib/hooks/use-conversation.svelte'
+  import { useCurrentConversation, useStreamingMessages } from '$lib/hooks/use-conversation.svelte'
   import { z } from '$lib/zero'
   import DOMPurify from 'dompurify'
   import { Bot } from 'lucide-svelte'
@@ -17,8 +13,8 @@
   import { marked } from 'marked'
   import { tick, untrack } from 'svelte'
 
-  const conversationSignal = useCurrentConversation()
-  const streaming = useStreamingMessages()
+  const conversationSignal = $derived(useCurrentConversation(page.params.id))
+  const streaming = $derived(useStreamingMessages(page.params.id))
 
   let sendOnEnter = $state(true)
   let scrollContainerRef = $state<HTMLDivElement | null>(null)
@@ -54,8 +50,6 @@
   }
 
   $effect(() => {
-    conversationId.value = page.params.id
-
     const isOwner = conversationSignal.data?.userId === z.current.userID
     const isPublicRead = conversationSignal.data?.accessLevel === 'public_read'
 
