@@ -3,18 +3,21 @@
   import { page } from '$app/state'
   import ShareLayout from '$lib/components/layout/share-layout.svelte'
   import { ScrollArea } from '$lib/components/ui/scroll-area'
-  import { useCurrentConversation, useStreamingMessages } from '$lib/hooks/use-conversation.svelte'
+  import { useStreamingMessages } from '$lib/hooks/use-streaming.svelte'
   import { z } from '$lib/zero'
   import DOMPurify from 'dompurify'
   import { Bot } from 'lucide-svelte'
   import { marked } from 'marked'
+  import { Query } from 'zero-svelte'
 
+  const conversation = $derived(page.params.id
+    ? new Query(z.current.query.conversations.where('id', page.params.id).one())
+    : null)
   const streaming = $derived(useStreamingMessages(page.params.id))
-  const conversationSignal = $derived(useCurrentConversation(page.params.id))
 
   $effect(() => {
-    const isOwner = conversationSignal.data?.userId === z.current.userID
-    const isPublicWrite = conversationSignal.data?.accessLevel === 'public_write'
+    const isOwner = conversation?.current?.userId === z.current.userID
+    const isPublicWrite = conversation?.current?.accessLevel === 'public_write'
 
     if (isOwner || isPublicWrite) {
       goto(`/chat/${page.params.id}`)
@@ -25,11 +28,11 @@
 
 <svelte:head>
   <title>
-    {conversationSignal.data?.title ?? 'Zero Chat - Offline First ChatGPT'}
+    {conversation?.current?.title ?? 'Zero Chat - Offline First ChatGPT'}
   </title>
 </svelte:head>
 
-<ShareLayout conversation={conversationSignal.data}>
+<ShareLayout conversation={conversation?.current ?? null}>
   <div class='flex flex-col items-center h-full '>
     <ScrollArea
       type='auto'

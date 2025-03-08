@@ -5,15 +5,18 @@
   import ScrollToBottom from '$lib/components/scroll-to-bottom.svelte'
   import Button from '$lib/components/ui/button/button.svelte'
   import { ScrollArea } from '$lib/components/ui/scroll-area'
-  import { useCurrentConversation, useStreamingMessages } from '$lib/hooks/use-conversation.svelte'
+  import { useStreamingMessages } from '$lib/hooks/use-streaming.svelte'
   import { z } from '$lib/zero'
   import DOMPurify from 'dompurify'
   import { Bot } from 'lucide-svelte'
   import SendHorizontal from 'lucide-svelte/icons/send-horizontal'
   import { marked } from 'marked'
   import { tick, untrack } from 'svelte'
+  import { Query } from 'zero-svelte'
 
-  const conversationSignal = $derived(useCurrentConversation(page.params.id))
+  const conversation = $derived(page.params.id
+    ? new Query(z.current.query.conversations.where('id', page.params.id).one())
+    : null)
   const streaming = $derived(useStreamingMessages(page.params.id))
 
   let sendOnEnter = $state(true)
@@ -50,8 +53,8 @@
   }
 
   $effect(() => {
-    const isOwner = conversationSignal.data?.userId === z.current.userID
-    const isPublicRead = conversationSignal.data?.accessLevel === 'public_read'
+    const isOwner = conversation?.current?.userId === z.current.userID
+    const isPublicRead = conversation?.current?.accessLevel === 'public_read'
 
     if (!isOwner && isPublicRead) {
       goto(`/share/${page.params.id}`)
@@ -108,12 +111,12 @@
 
 <svelte:head>
   <title>
-    {conversationSignal.data?.title ?? 'Zero Chat - Offline First ChatGPT'}
+    {conversation?.current?.title ?? 'Zero Chat - Offline First ChatGPT'}
   </title>
 </svelte:head>
 
 <SidebarLayout
-  conversation={conversationSignal.data}
+  conversation={conversation?.current ?? null}
   bind:followMessage
   bind:sendOnEnter
 >

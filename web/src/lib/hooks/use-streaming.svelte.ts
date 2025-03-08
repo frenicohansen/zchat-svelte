@@ -4,21 +4,8 @@ import { PUBLIC_BACKEND_URL } from '$env/static/public'
 import { z } from '$lib/zero'
 import { Query } from 'zero-svelte'
 
-export function useCurrentConversation(conversationId: string | undefined) {
-  const conversation = $derived(conversationId
-    ? new Query(z.current.query.conversations.where('id', conversationId).one())
-    : null)
-
-  return {
-    get id() { return conversationId },
-    get data() { return conversation ? conversation?.current ? conversation.current : null : null },
-  }
-}
-
 export function useStreamingMessages(conversationId: string | undefined) {
   let prompt = $state('')
-  const conversation = useCurrentConversation(conversationId)
-
   const handleSubmit = () => {
     if (!prompt.trim())
       return
@@ -30,7 +17,7 @@ export function useStreamingMessages(conversationId: string | undefined) {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        conversationId: conversation.data?.id ?? null,
+        conversationId: conversationId ?? null,
         message: prompt,
       }),
       credentials: 'include',
@@ -46,7 +33,9 @@ export function useStreamingMessages(conversationId: string | undefined) {
 
   let processingMessageId: number | null = $state(null)
 
-  const messageChunks = $derived(processingMessageId ? new Query(z.current.query.messageChunks.where('messageId', processingMessageId).orderBy('chunkIndex', 'asc')) : null)
+  const messageChunks = $derived(processingMessageId
+    ? new Query(z.current.query.messageChunks.where('messageId', processingMessageId).orderBy('chunkIndex', 'asc'))
+    : null)
 
   const existingMessages = $derived(conversationId
     ? new Query(
