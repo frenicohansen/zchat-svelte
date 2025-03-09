@@ -18,10 +18,7 @@
     const isOwner = conversation?.current?.userId === z.current.userID
     const isPublicWrite = conversation?.current?.accessLevel === 'public_write'
 
-    if (!conversation?.current) {
-      goto('/login')
-    }
-    else if (isOwner || isPublicWrite) {
+    if (isOwner || isPublicWrite) {
       goto(`/chat/${page.params.id}`)
     }
   })
