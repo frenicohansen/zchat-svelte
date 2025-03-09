@@ -36,6 +36,7 @@
     "marked": "^15.0.7",
     "minisearch": "^7.1.2",
     "mode-watcher": "^0.5.1",
+    "morphdom": "^2.7.4",
     "remove-markdown": "^0.6.0",
     "svelte": "^5.0.0",
     "svelte-check": "^4.0.0",
