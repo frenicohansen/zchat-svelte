@@ -50,7 +50,7 @@
   <Dialog.Root>
     <Dialog.Trigger>
       {#snippet child({ props })}
-        <Button variant='outline' size='icon' class='h-8 w-8' {...props}>
+        <Button variant='outline' size='icon' class='size-10' {...props}>
           <UserRound class='h-4 w-4' />
           <span class='sr-only'>Share conversation</span>
         </Button>

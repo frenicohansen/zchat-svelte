@@ -51,7 +51,7 @@
   />
   <Sidebar.Inset class='overflow-auto'>
     <header class='flex h-16 shrink-0 items-center gap-2'>
-      <div class='flex flex-1 items-center justify-between px-4'>
+      <div class='flex flex-1 items-center justify-between px-4 gap-3'>
         <div class='flex items-center gap-2'>
           <Sidebar.Trigger class='-ml-1' />
           <Separator orientation='vertical' class='mr-2 h-4' />
@@ -61,7 +61,7 @@
             </h1>
           </div>
           <Select.Root type='single' name='aiModel' bind:value>
-            <Select.Trigger class='w-[180px]'>
+            <Select.Trigger class='w-44'>
               {triggerContent}
             </Select.Trigger>
             <Select.Content>
@@ -85,8 +85,8 @@
           <Popover.Root>
             <Popover.Trigger>
               {#snippet child({ props })}
-                <Button variant='outline' size='icon' class='h-8 w-8' {...props}>
-                  <Settings class='h-4 w-4' />
+                <Button variant='outline' size='icon' class='size-10' {...props}>
+                  <Settings class='size-4' />
                   <span class='sr-only'>Settings</span>
                 </Button>
               {/snippet}
