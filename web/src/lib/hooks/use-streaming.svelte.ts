@@ -4,25 +4,16 @@ import { PUBLIC_BACKEND_URL } from '$env/static/public'
 import { z } from '$lib/zero'
 import { Query } from 'zero-svelte'
 
-export const conversationId: { value: string | null } = $state({
-  value: null,
-})
-
-export function useCurrentConversation() {
-  const conversation = $derived(conversationId.value
-    ? new Query(z.current.query.conversations.where('id', conversationId.value).one())
-    : null)
-
-  return {
-    get id() { return conversationId.value },
-    get data() { return conversation ? conversation?.current ? conversation.current : null : null },
-  }
+interface ResponseBody {
+  conversationId: string
+  messageId: number
 }
 
-export function useStreamingMessages() {
+export function useStreamingMessages(
+  conversationId: string | undefined,
+  onResponse?: (body: ResponseBody) => void,
+) {
   let prompt = $state('')
-  const conversation = useCurrentConversation()
-
   const handleSubmit = () => {
     if (!prompt.trim())
       return
@@ -34,15 +25,16 @@ export function useStreamingMessages() {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        conversationId: conversation.data?.id ?? null,
+        conversationId: conversationId ?? null,
         message: prompt,
       }),
       credentials: 'include',
     })
       .then(response => response.json())
-      .then((body) => {
+      .then((body: ResponseBody) => {
         prompt = ''
-        if (!conversationId.value) {
+        if (!conversationId) {
+          onResponse?.(body)
           goto(`/chat/${body.conversationId}`)
         }
       })
@@ -50,12 +42,14 @@ export function useStreamingMessages() {
 
   let processingMessageId: number | null = $state(null)
 
-  const messageChunks = $derived(processingMessageId ? new Query(z.current.query.messageChunks.where('messageId', processingMessageId).orderBy('chunkIndex', 'asc')) : null)
+  const messageChunks = $derived(processingMessageId
+    ? new Query(z.current.query.messageChunks.where('messageId', processingMessageId).orderBy('chunkIndex', 'asc'))
+    : null)
 
-  const existingMessages = $derived(conversationId.value
+  const existingMessages = $derived(conversationId
     ? new Query(
       z.current.query.messages
-        .where('conversationId', conversationId.value)
+        .where('conversationId', conversationId)
         .orderBy('updatedAt', 'asc'),
     )
     : null)

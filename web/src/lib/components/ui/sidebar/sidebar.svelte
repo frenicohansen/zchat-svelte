@@ -44,7 +44,7 @@
       style='--sidebar-width: {SIDEBAR_WIDTH_MOBILE};'
       {side}
     >
-      <div class='flex h-full w-full flex-col'>
+      <div class='flex h-full w-full flex-col select-none'>
         {@render children?.()}
       </div>
     </Sheet.Content>
