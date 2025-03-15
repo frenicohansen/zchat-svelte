@@ -5,7 +5,7 @@
   import { Query } from 'zero-svelte'
 
   let { open = $bindable(false) } = $props()
-  const conversations = new Query(z.current.query.conversations.related('messages'))
+  const conversations = new Query(z.current.query.conversations.where('accessLevel', 'private').related('messages'))
   type ExtraFields = { title: string, allMessages: string }
 
   let searchText = $state('')
