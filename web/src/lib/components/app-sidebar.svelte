@@ -6,7 +6,6 @@
   import SidebarProfile from '$lib/components/sidebar-profile.svelte'
   import { ScrollArea } from '$lib/components/ui/scroll-area'
   import * as Sidebar from '$lib/components/ui/sidebar'
-  import { z } from '$lib/zero'
   import { Bot, MessageSquarePlus, Search } from 'lucide-svelte'
 
   type AppSidebarProps = ComponentProps<typeof Sidebar.Root> & {
@@ -15,11 +14,6 @@
   }
 
   let { conversations, conversation, ref = $bindable(null), ...restProps }: AppSidebarProps = $props()
-
-  const personalConversations = $derived(
-    conversations.filter(conversation =>
-      conversation.userId === z.current.userID),
-  )
 
   let showSearch = $state(false)
   function handleOpenSearch() {
@@ -74,8 +68,8 @@
         <Sidebar.GroupLabel>Chats</Sidebar.GroupLabel>
         <Sidebar.GroupContent>
           <Sidebar.Menu>
-            {#if personalConversations.length > 0}
-              {#each personalConversations as personalConversation (personalConversation.id)}
+            {#if conversations.length > 0}
+              {#each conversations as personalConversation (personalConversation.id)}
                 <Sidebar.MenuItem>
                   <div class='flex w-full items-center'>
                     <Sidebar.MenuButton isActive={personalConversation.id === conversation?.id}>

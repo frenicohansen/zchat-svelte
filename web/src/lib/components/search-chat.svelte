@@ -1,11 +1,8 @@
 <script lang='ts'>
   import * as Command from '$lib/components/ui/command'
   import { miniSearch, splitMatchedSearch } from '$lib/utils'
-  import { z } from '$lib/zero'
-  import { Query } from 'zero-svelte'
 
   let { open = $bindable(false) } = $props()
-  const conversations = new Query(z.current.query.conversations.where('accessLevel', 'private').related('messages'))
   type ExtraFields = { title: string, allMessages: string }
 
   let searchText = $state('')
@@ -19,25 +16,6 @@
       },
       50,
     )))
-
-  const updateSearch = (docs: typeof conversations) => {
-    docs.current.forEach((conversation) => {
-      miniSearch.instance.has(conversation.id)
-        ? miniSearch.instance.replace(conversation)
-        : miniSearch.instance.add(conversation)
-    })
-  }
-
-  $effect(() => {
-    try {
-      updateSearch(conversations)
-    }
-    catch {
-      miniSearch.instance.removeAll()
-      updateSearch(conversations)
-    }
-    miniSearch.debouncedSave()
-  })
 </script>
 
 <Command.Dialog

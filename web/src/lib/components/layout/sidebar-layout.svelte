@@ -10,6 +10,7 @@
   import { Separator } from '$lib/components/ui/separator'
   import * as Sidebar from '$lib/components/ui/sidebar'
   import { Switch } from '$lib/components/ui/switch'
+  import { miniSearch } from '$lib/utils'
   import { z } from '$lib/zero'
   import Settings from 'lucide-svelte/icons/settings'
   import { Query } from 'zero-svelte'
@@ -20,7 +21,7 @@
     { value: 'deepseek-r1', label: 'DeepSeek R1', enabled: false },
   ]
 
-  const conversations = new Query(z.current.query.conversations.orderBy('updatedAt', 'desc'))
+  const conversations = new Query(z.current.query.conversations.where('accessLevel', 'private').orderBy('updatedAt', 'desc').related('messages'))
 
   interface SidebarLayoutProps {
     conversation: Conversation | null
@@ -40,6 +41,15 @@
   const triggerContent = $derived(
     aiModels.find(model => model.value === value)?.label ?? 'Select a model',
   )
+
+  $effect(() => {
+    conversations.current.forEach((conversation) => {
+      miniSearch.instance.has(conversation.id)
+        ? miniSearch.instance.replace(conversation)
+        : miniSearch.instance.add(conversation)
+    })
+    miniSearch.debouncedSave()
+  })
 </script>
 
 <Sidebar.Provider class='h-svh'>
