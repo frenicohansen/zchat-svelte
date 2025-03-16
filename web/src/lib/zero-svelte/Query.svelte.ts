@@ -1,4 +1,10 @@
-import type { Query as QueryDef, ReadonlyJSONValue, Schema, TypedView } from '@rocicorp/zero'
+import type {
+  Query as QueryDef,
+  ReadonlyJSONValue,
+  Schema,
+  TTL,
+  TypedView,
+} from '@rocicorp/zero'
 import type { AdvancedQuery, HumanReadable } from '@rocicorp/zero/advanced'
 import type { Immutable } from './types'
 import type { Z } from './Z.svelte'
@@ -35,6 +41,7 @@ class ViewWrapper<
 
   constructor(
     private query: AdvancedQuery<TSchema, TTable, TReturn>,
+    private ttl: TTL,
     private onMaterialized: (view: ViewWrapper<TSchema, TTable, TReturn>) => void,
     private onDematerialized: () => void,
   ) {
@@ -71,7 +78,7 @@ class ViewWrapper<
 
   #materializeIfNeeded() {
     if (!this.#view) {
-      this.#view = this.query.materialize()
+      this.#view = this.query.materialize(this.ttl)
       this.onMaterialized(this)
     }
   }
@@ -82,6 +89,11 @@ class ViewWrapper<
     this.#subscribe()
     return this.#snapshot
   }
+
+  updateTTL(ttl: TTL): void {
+    this.ttl = ttl
+    this.query.updateTTL(ttl)
+  }
 }
 
 class ViewStore {
@@ -91,10 +103,12 @@ class ViewStore {
     clientID: string,
     query: AdvancedQuery<TSchema, TTable, TReturn>,
     enabled: boolean = true,
+    ttl: TTL,
   ): ViewWrapper<TSchema, TTable, TReturn> {
     if (!enabled) {
       return new ViewWrapper(
         query,
+        ttl,
         () => {},
         () => {},
       )
@@ -106,6 +120,7 @@ class ViewStore {
     if (!existing) {
       existing = new ViewWrapper(
         query,
+        ttl,
         (view) => {
           const lastView = this.#views.get(hash)
           if (lastView && lastView !== view) {
@@ -117,6 +132,9 @@ class ViewStore {
       )
       this.#views.set(hash, existing)
     }
+    else {
+      existing.updateTTL(ttl)
+    }
 
     return existing
   }
@@ -124,7 +142,15 @@ class ViewStore {
 
 export const viewStore = new ViewStore()
 
-type MaybeGetter<T> = T | (() => T)
+export interface QueryOptions {
+  enabled?: boolean | undefined
+  /**
+   * Time to live (TTL) in seconds. Controls how long query results are cached
+   * after the query is removed. During this time, Zero continues to sync the query.
+   * Default is 10 seconds.
+   */
+  ttl?: TTL | undefined
+}
 
 export class Query<
   TSchema extends Schema,
@@ -135,14 +161,17 @@ export class Query<
   details = $state<QueryResultDetails>(null!)
   #query_impl: AdvancedQuery<TSchema, TTable, TReturn>
 
-  constructor(query: MaybeGetter<QueryDef<TSchema, TTable, TReturn>>, enabled: boolean = true) {
+  constructor(query: MaybeGetter<QueryDef<TSchema, TTable, TReturn>>, options?: QueryOptions) {
     const z = getContext('z') as Z<Schema>
     const id = z?.current?.userID ? z?.current.userID : 'anon'
     this.#query_impl = (typeof query === 'function' ? query() : query) as AdvancedQuery<TSchema, TTable, TReturn>
     const default_snapshot = getDefaultSnapshot(this.#query_impl.format.singular)
     this.current = default_snapshot[0] as HumanReadable<TReturn>
     this.details = default_snapshot[1]
-    const view = viewStore.getView(id, this.#query_impl, enabled)
+
+    const enabled = options?.enabled ?? true
+    const ttl = options?.ttl ?? 'none'
+    const view = viewStore.getView(id, this.#query_impl, enabled, ttl)
     this.current = view.current[0]
     this.details = view.current[1]
     $effect(() => {

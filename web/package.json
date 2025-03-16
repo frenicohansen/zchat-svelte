@@ -15,7 +15,7 @@
   },
   "devDependencies": {
     "@antfu/eslint-config": "^4.3.0",
-    "@rocicorp/zero": "0.16.2025022800",
+    "@rocicorp/zero": "0.17.2025031400",
     "@sveltejs/adapter-static": "^3.0.8",
     "@sveltejs/kit": "^2.16.0",
     "@sveltejs/vite-plugin-svelte": "^5.0.0",
