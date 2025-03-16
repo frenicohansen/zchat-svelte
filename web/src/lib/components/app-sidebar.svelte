@@ -6,7 +6,7 @@
   import SidebarProfile from '$lib/components/sidebar-profile.svelte'
   import { ScrollArea } from '$lib/components/ui/scroll-area'
   import * as Sidebar from '$lib/components/ui/sidebar'
-  import { Bot, MessageSquarePlus, Search } from 'lucide-svelte'
+  import { MessageSquare, MessageSquarePlus, Search } from 'lucide-svelte'
 
   type AppSidebarProps = ComponentProps<typeof Sidebar.Root> & {
     conversations: Conversation[]
@@ -75,7 +75,7 @@
                     <Sidebar.MenuButton isActive={personalConversation.id === conversation?.id}>
                       {#snippet child({ props })}
                         <a href={`/chat/${personalConversation.id}`} draggable='false' {...props}>
-                          <Bot class='mr-2 h-4 w-4' />
+                          <MessageSquare class='mr-2 h-4 w-4' />
                           <span class='truncate'>{personalConversation.title}</span>
                         </a>
                       {/snippet}
