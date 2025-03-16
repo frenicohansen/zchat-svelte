@@ -148,12 +148,12 @@ app.post("/", async (c) => {
 				if (convIdFromClient) return;
 
 				try {
-					const titlePrompt = `Generate a short, descriptive title (max. 3 words, without quotation marks, and plain text) for the following conversation:\n\n${prompt}`;
+					const titlePrompt = `Generate a short, descriptive title (max. 3 words and plain text) for the following conversation:\n\n${prompt}`;
 					const titleResult = await generateText({
 						model: openrouter(modelName),
 						prompt: titlePrompt,
 					});
-					const generatedTitle = titleResult.text.trim();
+					const generatedTitle = titleResult.text.trim().replace(/^"|"$/g, '');
 
 					await db
 						.update(schema.conversations)
