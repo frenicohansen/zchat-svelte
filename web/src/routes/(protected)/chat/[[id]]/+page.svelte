@@ -9,15 +9,17 @@
   import { useScrollingChat } from '$lib/hooks/use-scrolling-chat.svelte'
   import { useStreamingMessages } from '$lib/hooks/use-streaming.svelte'
   import { z } from '$lib/zero'
-  import { Query } from '$lib/zero-svelte'
+  import { createQuery } from '$lib/zero-svelte'
   import { Bot } from 'lucide-svelte'
   import SendHorizontal from 'lucide-svelte/icons/send-horizontal'
   import { tick, untrack } from 'svelte'
 
   let optimisticConversationIds = $state<string[]>([])
-  const conversation = $derived(page.params.id
-    ? new Query(z.current.query.conversations.where('id', page.params.id).one())
-    : null)
+  const conversation = createQuery(() =>
+    page.params.id
+      ? z.current.query.conversations.where('id', page.params.id).one()
+      : null,
+  )
   const streaming = $derived(useStreamingMessages(page.params.id, body => optimisticConversationIds.push(body.conversationId)))
 
   let sendOnEnter = $state(true)

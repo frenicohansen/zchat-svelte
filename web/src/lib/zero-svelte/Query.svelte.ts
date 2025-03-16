@@ -30,6 +30,13 @@ function getDefaultSnapshot<TReturn>(singular: boolean): QueryResult<TReturn> {
   return (singular ? defaultSnapshots.singular : defaultSnapshots.plural) as QueryResult<TReturn>
 }
 
+type Getter<T> = () => T
+type MaybeGetter<T> = T | Getter<T>
+
+function toValue<T>(value: MaybeGetter<T>): T {
+  return typeof value === 'function' ? (value as Getter<T>)() : value
+}
+
 class ViewWrapper<
   TSchema extends Schema,
   TTable extends keyof TSchema['tables'] & string,
@@ -164,7 +171,7 @@ export class Query<
   constructor(query: MaybeGetter<QueryDef<TSchema, TTable, TReturn>>, options?: QueryOptions) {
     const z = getContext('z') as Z<Schema>
     const id = z?.current?.userID ? z?.current.userID : 'anon'
-    this.#query_impl = (typeof query === 'function' ? query() : query) as AdvancedQuery<TSchema, TTable, TReturn>
+    this.#query_impl = toValue(query) as AdvancedQuery<TSchema, TTable, TReturn>
     const default_snapshot = getDefaultSnapshot(this.#query_impl.format.singular)
     this.current = default_snapshot[0] as HumanReadable<TReturn>
     this.details = default_snapshot[1]
@@ -179,4 +186,13 @@ export class Query<
       this.details = view.current[1]
     })
   }
+}
+
+export function createQuery<
+  TSchema extends Schema,
+  TTable extends keyof TSchema['tables'] & string,
+  TReturn,
+>(query: MaybeGetter<QueryDef<TSchema, TTable, TReturn> | null>, options?: QueryOptions) {
+  const q = toValue(query)
+  return q ? new Query(() => q, options) : null
 }
