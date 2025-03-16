@@ -4,20 +4,18 @@
   import * as Sidebar from '$lib/components/ui/sidebar'
   import { miniSearch } from '$lib/utils'
   import { z } from '$lib/zero'
-  import { Query } from '$lib/zero-svelte'
   import X from 'lucide-svelte/icons/x'
 
   let show = $state(false)
 
   // eslint-disable-next-line prefer-const
-  let { conversationId }: { conversationId: string | null } = $props()
-  const allMessagesInConversation = conversationId
-    ? new Query(z.current.query.messages.where('conversationId', conversationId))
-    : null
+  let { conversationId }: { conversationId: string } = $props()
 
   async function handleDelete() {
+    const allMessagesInConversation = await z.current.query.messages.where('conversationId', conversationId).run()
+
     await z.current.mutateBatch(async (tx) => {
-      allMessagesInConversation?.current.forEach((message) => {
+      allMessagesInConversation.forEach((message) => {
         tx.messages.delete({ id: message.id })
       })
       tx.conversations.delete({ id: conversationId })

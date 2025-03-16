@@ -178,10 +178,9 @@ export class Query<
 
     const enabled = options?.enabled ?? true
     const ttl = options?.ttl ?? 'none'
-    const view = viewStore.getView(id, this.#query_impl, enabled, ttl)
-    this.current = view.current[0]
-    this.details = view.current[1]
     $effect(() => {
+      this.#query_impl = toValue(query) as AdvancedQuery<TSchema, TTable, TReturn>
+      const view = viewStore.getView(id, this.#query_impl, enabled, ttl)
       this.current = view.current[0]
       this.details = view.current[1]
     })
@@ -192,7 +191,6 @@ export function createQuery<
   TSchema extends Schema,
   TTable extends keyof TSchema['tables'] & string,
   TReturn,
->(query: MaybeGetter<QueryDef<TSchema, TTable, TReturn> | null>, options?: QueryOptions) {
-  const q = toValue(query)
-  return q ? new Query(() => q, options) : null
+>(query: MaybeGetter<QueryDef<TSchema, TTable, TReturn>>, options?: QueryOptions) {
+  return new Query(query, options)
 }

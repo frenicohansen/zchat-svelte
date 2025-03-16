@@ -1,28 +1,15 @@
 <script lang='ts'>
-  import { goto } from '$app/navigation'
   import { page } from '$app/state'
   import ShareLayout from '$lib/components/layout/share-layout.svelte'
   import Markdown from '$lib/components/markdown.svelte'
   import { ScrollArea } from '$lib/components/ui/scroll-area'
-  import { useStreamingMessages } from '$lib/hooks/use-streaming.svelte'
+  import { StreamingMessagesManager } from '$lib/hooks/streaming.svelte'
   import { z } from '$lib/zero'
-  import { Query } from '$lib/zero-svelte'
+  import { createQuery } from '$lib/zero-svelte'
   import { Bot } from 'lucide-svelte'
 
-  const conversation = $derived(page.params.id
-    ? new Query(z.current.query.conversations.where('id', page.params.id).one())
-    : null)
-  const streaming = $derived(useStreamingMessages(page.params.id))
-
-  $effect(() => {
-    const isOwner = conversation?.current?.userId === z.current.userID
-    const isPublicWrite = conversation?.current?.accessLevel === 'public_write'
-
-    if (isOwner || isPublicWrite) {
-      goto(`/chat/${page.params.id}`)
-    }
-  })
-
+  const conversation = createQuery(() => z.current.query.conversations.where('id', page.params.id ?? null).one())
+  const streamingManager = new StreamingMessagesManager(() => page.params.id)
 </script>
 
 <svelte:head>
@@ -39,8 +26,8 @@
       class='size-full'
     >
       <div class='flex flex-col items-center gap-8 h-full py-8'>
-        {#if streaming.messages && streaming.messages.length > 0}
-          {#each streaming.messages as message (message.id)}
+        {#if streamingManager.streamingMessages && streamingManager.streamingMessages.length > 0}
+          {#each streamingManager.streamingMessages as message (message.id)}
             {#if message.sender === 'assistant'}
               <div class='flex justify-start w-full max-w-4xl px-8 lg:px-4'>
                 <div class='rounded-lg px-4 py-2 max-w-[80%] bg-muted/50 backdrop-blur-sm'>

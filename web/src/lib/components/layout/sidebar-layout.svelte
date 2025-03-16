@@ -12,7 +12,7 @@
   import { Switch } from '$lib/components/ui/switch'
   import { miniSearch } from '$lib/utils'
   import { z } from '$lib/zero'
-  import { Query } from '$lib/zero-svelte'
+  import { createQuery } from '$lib/zero-svelte'
   import Settings from 'lucide-svelte/icons/settings'
 
   const aiModels = [
@@ -21,7 +21,7 @@
     { value: 'deepseek-r1', label: 'DeepSeek R1', enabled: false },
   ]
 
-  const conversations = new Query(z.current.query.conversations.where('accessLevel', 'private').orderBy('updatedAt', 'desc').related('messages'))
+  const conversations = createQuery(z.current.query.conversations.where('accessLevel', 'private').orderBy('updatedAt', 'desc').related('messages'))
 
   interface SidebarLayoutProps {
     conversation: Conversation | null

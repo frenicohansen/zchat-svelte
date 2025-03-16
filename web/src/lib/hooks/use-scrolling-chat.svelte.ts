@@ -1,14 +1,21 @@
 import { tick, untrack } from 'svelte'
-import { useStreamingMessages } from './use-streaming.svelte'
+import { StreamingMessagesManager } from './streaming.svelte'
 
 export function useScrollingChat(
-  conversationId: string | undefined,
-  scrollContainerRef: HTMLDivElement | null,
+  conversationId: () => string | undefined,
+  scrollContainerRef: () => HTMLDivElement | null,
 ) {
   let followMessage = $state(true)
   let showScrollButton = $state(false)
   let isScrollingUp = $state(false)
   let lastScrollTop = $state(0)
+
+  function resetState() {
+    followMessage = true
+    showScrollButton = false
+    isScrollingUp = false
+    lastScrollTop = 0
+  }
 
   function isBottom(scrollContainerRef: HTMLDivElement) {
     const threshold = 100
@@ -16,20 +23,23 @@ export function useScrollingChat(
   }
 
   function handleScroll() {
-    if (!scrollContainerRef)
+    const ref = scrollContainerRef()
+    if (!ref)
       return
 
-    showScrollButton = !isBottom(scrollContainerRef)
-    isScrollingUp = scrollContainerRef.scrollTop < lastScrollTop
-    lastScrollTop = scrollContainerRef.scrollTop
+    const threshold = -30
+    showScrollButton = !isBottom(ref)
+    isScrollingUp = ref.scrollTop - lastScrollTop < threshold
+    lastScrollTop = ref.scrollTop
   }
 
   function scrollToBottom() {
-    if (!scrollContainerRef)
+    const ref = scrollContainerRef()
+    if (!ref)
       return
 
-    scrollContainerRef.scrollTo({
-      top: scrollContainerRef.scrollHeight,
+    ref.scrollTo({
+      top: ref.scrollHeight,
       behavior: 'smooth',
     })
 
@@ -43,18 +53,24 @@ export function useScrollingChat(
   // 4. When user scrolls up, disable follow message, only follow message aagain when user is at bottom
   // 5. When user is not at bottom, show scroll to bottom button, else hide it
 
-  const streaming = $derived(useStreamingMessages(conversationId))
+  const streamingManager = new StreamingMessagesManager(conversationId)
 
   $effect(() => {
-    const lastMessage = streaming.messages[streaming.messages.length - 1]
+    const _id = conversationId()
+    resetState()
+  })
+
+  $effect(() => {
+    const lastMessage = streamingManager.streamingMessages[streamingManager.streamingMessages.length - 1]
     const lastMessageByUser = lastMessage && lastMessage.sender === 'user'
     const isScrollingUpUntrack = untrack(() => isScrollingUp)
 
-    if (scrollContainerRef) {
-      showScrollButton = !isBottom(scrollContainerRef)
+    const ref = scrollContainerRef()
+    if (ref) {
+      showScrollButton = !isBottom(ref)
     }
 
-    if (lastMessageByUser || (followMessage && !isScrollingUpUntrack && scrollContainerRef && isBottom(scrollContainerRef))) {
+    if (lastMessageByUser || (followMessage && !isScrollingUpUntrack && ref && isBottom(ref))) {
       tick().then(() => {
         scrollToBottom()
       })

@@ -6,40 +6,30 @@
   import ScrollToBottom from '$lib/components/scroll-to-bottom.svelte'
   import Button from '$lib/components/ui/button/button.svelte'
   import { ScrollArea } from '$lib/components/ui/scroll-area'
+  import { StreamingMessagesManager } from '$lib/hooks/streaming.svelte'
   import { useScrollingChat } from '$lib/hooks/use-scrolling-chat.svelte'
-  import { useStreamingMessages } from '$lib/hooks/use-streaming.svelte'
   import { z } from '$lib/zero'
   import { createQuery } from '$lib/zero-svelte'
   import { Bot } from 'lucide-svelte'
   import SendHorizontal from 'lucide-svelte/icons/send-horizontal'
-  import { tick, untrack } from 'svelte'
+  import { tick } from 'svelte'
 
-  let optimisticConversationIds = $state<string[]>([])
-  const conversation = createQuery(() =>
-    page.params.id
-      ? z.current.query.conversations.where('id', page.params.id).one()
-      : null,
-  )
-  const streaming = $derived(useStreamingMessages(page.params.id, body => optimisticConversationIds.push(body.conversationId)))
+  const conversation = createQuery(() => z.current.query.conversations.where('id', page.params.id ?? null).one())
+  const streamingManager = new StreamingMessagesManager(() => page.params.id)
 
   let sendOnEnter = $state(true)
   let scrollContainerRef = $state<HTMLDivElement | null>(null)
-  const scrollingChat = $derived(useScrollingChat(page.params.id, scrollContainerRef))
+  const scrollingChat = useScrollingChat(
+    () => page.params.id,
+    () => scrollContainerRef,
+  )
 
   $effect(() => {
     const isOwner = conversation?.current?.userId === z.current.userID
     const isPublicRead = conversation?.current?.accessLevel === 'public_read'
-    const optimisticIds = untrack(() => optimisticConversationIds)
-    const inOptimistic = page.params.id && optimisticIds.includes(page.params.id)
 
-    if (!conversation?.current && !inOptimistic) {
-      goto('/chat')
-    }
-    else if (!isOwner && isPublicRead) {
+    if (!isOwner && isPublicRead) {
       goto(`/share/${page.params.id}`)
-    }
-    else if (inOptimistic) {
-      optimisticConversationIds = optimisticIds.filter(id => id !== page.params.id)
     }
 
     tick().then(() => {
@@ -52,18 +42,18 @@
   function handleTextareaKeydown(e: KeyboardEvent) {
     const isEnterKey = e.key === 'Enter'
     const isModifierKey = e.metaKey || e.ctrlKey
-    const hasNewline = streaming.prompt.includes('\n')
+    const hasNewline = streamingManager.prompt.includes('\n')
 
     if (!isEnterKey)
       return
 
     if (sendOnEnter && !e.shiftKey && (!hasNewline || isModifierKey)) {
       e.preventDefault()
-      streaming.handleSubmit()
+      streamingManager.handleSubmit()
     }
     else if (!sendOnEnter && isModifierKey) {
       e.preventDefault()
-      streaming.handleSubmit()
+      streamingManager.handleSubmit()
     }
   }
 </script>
@@ -88,8 +78,8 @@
       class='size-full'
     >
       <div class='flex flex-col items-center gap-8 h-full py-8'>
-        {#if streaming.messages && streaming.messages.length > 0}
-          {#each streaming.messages as message (message.id)}
+        {#if streamingManager.streamingMessages && streamingManager.streamingMessages.length > 0}
+          {#each streamingManager.streamingMessages as message (message.id)}
             {#if message.sender === 'assistant'}
               <div class='flex justify-start w-full max-w-4xl px-8 lg:px-4'>
                 <div class='rounded-lg px-4 py-2 max-w-[80%] bg-muted/50 backdrop-blur-sm'>
@@ -152,7 +142,7 @@
     >
       <form
         class='focus-within:border-ring/20 flex relative w-full flex-wrap items-end rounded-lg border px-2.5 shadow-sm transition-colors ease-in'
-        onsubmit={streaming.handleSubmit}
+        onsubmit={streamingManager.handleSubmit}
       >
         <ScrollToBottom
           visible={scrollingChat.showScrollButton}
@@ -161,7 +151,7 @@
         <textarea
           class='bg-background placeholder:text-muted-foreground resize-none flex min-h-28 outline-none flex-grow px-3 py-4 text-base disabled:cursor-not-allowed disabled:opacity-50 md:text-sm max-h-40'
           placeholder='Write a message...'
-          bind:value={streaming.prompt}
+          bind:value={streamingManager.prompt}
           onkeydown={handleTextareaKeydown}
         ></textarea>
         <Button class='my-2.5' variant='default' size='icon' type='submit'>
