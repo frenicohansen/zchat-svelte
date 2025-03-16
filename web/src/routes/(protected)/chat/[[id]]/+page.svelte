@@ -8,12 +8,15 @@
   import { ScrollArea } from '$lib/components/ui/scroll-area'
   import { StreamingMessagesManager } from '$lib/hooks/streaming.svelte'
   import { useScrollingChat } from '$lib/hooks/use-scrolling-chat.svelte'
+  import { miniSearch } from '$lib/utils'
   import { z } from '$lib/zero'
   import { createQuery } from '$lib/zero-svelte'
   import SendHorizontal from 'lucide-svelte/icons/send-horizontal'
   import { tick } from 'svelte'
 
-  const conversation = createQuery(() => z.current.query.conversations.where('id', page.params.id ?? null).one())
+  const conversations = createQuery(z.current.query.conversations.where('userId', z.current.userID).orderBy('updatedAt', 'desc').related('messages'))
+  const conversation = $derived(conversations.current.find(c => c.id === page.params.id))
+
   const streamingManager = new StreamingMessagesManager(() => page.params.id)
 
   let sendOnEnter = $state(true)
@@ -25,8 +28,17 @@
   )
 
   $effect(() => {
-    const isOwner = conversation?.current?.userId === z.current.userID
-    const isPublicRead = conversation?.current?.accessLevel === 'public_read'
+    conversations.current.forEach((conversation) => {
+      miniSearch.instance.has(conversation.id)
+        ? miniSearch.instance.replace(conversation)
+        : miniSearch.instance.add(conversation)
+    })
+    miniSearch.debouncedSave()
+  })
+
+  $effect(() => {
+    const isOwner = conversation?.userId === z.current.userID
+    const isPublicRead = conversation?.accessLevel === 'public_read'
 
     if (!isOwner && isPublicRead) {
       goto(`/share/${page.params.id}`)
@@ -61,12 +73,13 @@
 
 <svelte:head>
   <title>
-    {conversation?.current?.title ?? 'Zero Chat - Offline First ChatGPT'}
+    {conversation?.title ?? 'Zero Chat - Offline First ChatGPT'}
   </title>
 </svelte:head>
 
 <SidebarLayout
-  conversation={conversation?.current ?? null}
+  conversation={conversation ?? null}
+  conversations={conversations.current}
   bind:followMessage={scrollingChat.followMessage}
   bind:sendOnEnter
 >
