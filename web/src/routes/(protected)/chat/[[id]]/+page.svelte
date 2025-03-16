@@ -18,6 +18,7 @@
 
   let sendOnEnter = $state(true)
   let scrollContainerRef = $state<HTMLDivElement | null>(null)
+  let textareaRef = $state<HTMLTextAreaElement | null>(null)
   const scrollingChat = useScrollingChat(
     () => page.params.id,
     () => scrollContainerRef,
@@ -32,6 +33,7 @@
     }
 
     tick().then(() => {
+      textareaRef?.focus()
       if (page.params.id) {
         scrollingChat.scrollToBottom()
       }
@@ -93,6 +95,7 @@
           class='bg-background placeholder:text-muted-foreground resize-none flex min-h-28 outline-none flex-grow px-3 py-4 text-base disabled:cursor-not-allowed disabled:opacity-50 md:text-sm max-h-40'
           placeholder='Write a message...'
           bind:value={streamingManager.prompt}
+          bind:this={textareaRef}
           onkeydown={handleTextareaKeydown}
         ></textarea>
         <Button class='my-2.5' variant='default' size='icon' type='submit'>
