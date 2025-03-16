@@ -1,7 +1,6 @@
 <script lang='ts'>
   import type { Message } from '$lib/db/zero-schema'
   import Markdown from '$lib/components/markdown.svelte'
-  import { Bot } from 'lucide-svelte'
 
   // eslint-disable-next-line prefer-const
   let { messages }: { messages: Message[] } = $props()
@@ -53,11 +52,6 @@
   {:else}
     <div class='flex h-full items-center justify-center'>
       <div class='text-center'>
-        <div
-          class='inline-flex h-12 w-12 items-center justify-center rounded-full bg-primary/10 mb-4'
-        >
-          <Bot class='h-6 w-6 text-primary' />
-        </div>
         <h3 class='text-lg font-semibold'>Welcome to ZChat</h3>
         <p class='text-muted-foreground'>
           Start a conversation by typing a message below.
