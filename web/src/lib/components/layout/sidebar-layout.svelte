@@ -12,8 +12,8 @@
   import { Switch } from '$lib/components/ui/switch'
   import { miniSearch } from '$lib/utils'
   import { z } from '$lib/zero'
+  import { Query } from '$lib/zero-svelte'
   import Settings from 'lucide-svelte/icons/settings'
-  import { Query } from 'zero-svelte'
 
   const aiModels = [
     { value: 'gemini-2.0-flash', label: 'Gemini 2.0 Flash', enabled: true },

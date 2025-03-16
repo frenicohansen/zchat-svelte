@@ -1,11 +1,12 @@
 import type { Schema } from '$lib/db/zero-schema'
+import type { ZeroOptions } from '@rocicorp/zero'
 import { PUBLIC_ZERO_SERVER } from '$env/static/public'
 import { authClient } from '$lib/auth-client'
 import { schema } from '$lib/db/zero-schema'
+import { Z } from '$lib/zero-svelte'
 import { decodeJwt } from 'jose'
-import { Z } from 'zero-svelte'
 
-export async function get_z_options() {
+export async function get_z_options(): Promise<ZeroOptions<Schema>> {
   const { data: token } = await authClient.token()
   let payload = token ? decodeJwt(token.token) : null
 

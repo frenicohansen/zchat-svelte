@@ -40,8 +40,5 @@
     "esbuild",
     "protobufjs",
     "zchat"
-  ],
-  "overrides": {
-    "@rocicorp/zero": "0.16.2025022800"
-  }
+  ]
 }

@@ -9,10 +9,10 @@
   import { useScrollingChat } from '$lib/hooks/use-scrolling-chat.svelte'
   import { useStreamingMessages } from '$lib/hooks/use-streaming.svelte'
   import { z } from '$lib/zero'
+  import { Query } from '$lib/zero-svelte'
   import { Bot } from 'lucide-svelte'
   import SendHorizontal from 'lucide-svelte/icons/send-horizontal'
   import { tick, untrack } from 'svelte'
-  import { Query } from 'zero-svelte'
 
   let optimisticConversationIds = $state<string[]>([])
   const conversation = $derived(page.params.id

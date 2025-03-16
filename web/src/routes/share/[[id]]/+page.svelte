@@ -6,8 +6,8 @@
   import { ScrollArea } from '$lib/components/ui/scroll-area'
   import { useStreamingMessages } from '$lib/hooks/use-streaming.svelte'
   import { z } from '$lib/zero'
+  import { Query } from '$lib/zero-svelte'
   import { Bot } from 'lucide-svelte'
-  import { Query } from 'zero-svelte'
 
   const conversation = $derived(page.params.id
     ? new Query(z.current.query.conversations.where('id', page.params.id).one())

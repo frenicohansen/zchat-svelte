@@ -4,8 +4,8 @@
   import * as Sidebar from '$lib/components/ui/sidebar'
   import { miniSearch } from '$lib/utils'
   import { z } from '$lib/zero'
+  import { Query } from '$lib/zero-svelte'
   import X from 'lucide-svelte/icons/x'
-  import { Query } from 'zero-svelte'
 
   let show = $state(false)
 

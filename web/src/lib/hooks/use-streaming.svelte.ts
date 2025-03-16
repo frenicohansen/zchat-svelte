@@ -2,7 +2,7 @@ import type { Message } from '$lib/db/zero-schema'
 import { goto } from '$app/navigation'
 import { PUBLIC_BACKEND_URL } from '$env/static/public'
 import { z } from '$lib/zero'
-import { Query } from 'zero-svelte'
+import { Query } from '$lib/zero-svelte'
 
 interface ResponseBody {
   conversationId: string
