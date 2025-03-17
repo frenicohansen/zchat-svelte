@@ -1,10 +1,13 @@
 <script lang='ts'>
+  import type { TokensResult } from 'shiki/core'
   import { highlighter } from '$lib/shiki'
   import Copy from 'lucide-svelte/icons/copy'
   import { toast } from 'svelte-sonner'
 
   // eslint-disable-next-line prefer-const
   let { lang, text }: { lang: string, text: string } = $props()
+
+  let tokenResult = $state<TokensResult | null>(null)
 
   async function highlight(lang: string, text: string) {
     try {
@@ -31,6 +34,10 @@
     navigator.clipboard.writeText(text)
     toast.success('Code copied to clipboard.')
   }
+
+  $effect(() => {
+    highlight(lang, text).then(res => tokenResult = res)
+  })
 </script>
 
 <div class='relative mt-2 flex w-full flex-col'>
@@ -45,11 +52,10 @@
       <Copy class='size-4' />
     </button>
   </div>
-  {#await highlight(lang, text)}
-    <pre class='mt-0 rounded-t-none'><code>{text}</code></pre>
-  {:then t}
-    <pre class='mt-0 rounded-t-none'><code>{#each t.tokens as token}<span class='line'>{#each token as { content, color }}<span style:color>{content}</span>{/each}</span>
-{/each}</code
-  ></pre>
-  {/await}
+  {#if tokenResult?.tokens?.length}
+    <pre class='mt-0 rounded-t-none' style:background-color={tokenResult.bg} style:color={tokenResult.fg}><code>{#each tokenResult.tokens as token}<span class='line'>{#each token as { content, color }}<span style:color>{content}</span>{/each}</span>
+{/each}</code></pre>
+  {:else}
+    <pre class='mt-0 rounded-t-none' style:background-color='#222222' style:color='#E6E6E6'><code>{text}</code></pre>
+  {/if}
 </div>
