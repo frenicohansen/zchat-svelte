@@ -8,11 +8,12 @@
   import { ScrollArea } from '$lib/components/ui/scroll-area'
   import { StreamingMessagesManager } from '$lib/hooks/streaming.svelte'
   import { useScrollingChat } from '$lib/hooks/use-scrolling-chat.svelte'
+  import { highlighter } from '$lib/shiki'
   import { miniSearch } from '$lib/utils'
   import { z } from '$lib/zero'
   import { Query } from '$lib/zero-svelte'
   import SendHorizontal from 'lucide-svelte/icons/send-horizontal'
-  import { tick } from 'svelte'
+  import { onDestroy, tick } from 'svelte'
 
   const conversations = new Query(z.current.query.conversations.where('userId', z.current.userID).orderBy('updatedAt', 'desc').related('messages'))
   const conversation = $derived(conversations.current.find(c => c.id === page.params.id))
@@ -50,6 +51,10 @@
         scrollingChat.scrollToBottom()
       }
     })
+  })
+
+  onDestroy(() => {
+    highlighter.close()
   })
 
   function handleTextareaKeydown(e: KeyboardEvent) {

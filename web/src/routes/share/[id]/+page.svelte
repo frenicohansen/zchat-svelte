@@ -4,11 +4,17 @@
   import { ScrollArea } from '$lib/components/ui/scroll-area'
   import * as Sidebar from '$lib/components/ui/sidebar'
   import { StreamingMessagesManager } from '$lib/hooks/streaming.svelte'
+  import { highlighter } from '$lib/shiki'
   import { z } from '$lib/zero'
   import { Query } from '$lib/zero-svelte'
+  import { onDestroy } from 'svelte'
 
   const conversation = new Query(() => z.current.query.conversations.where('id', page.params.id ?? null).one())
   const streamingManager = new StreamingMessagesManager(() => page.params.id)
+
+  onDestroy(() => {
+    highlighter.close()
+  })
 </script>
 
 <svelte:head>
