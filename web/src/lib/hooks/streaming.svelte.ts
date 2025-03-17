@@ -5,7 +5,6 @@ import { z } from '$lib/zero'
 import { Query } from '$lib/zero-svelte'
 
 export class StreamingMessagesManager {
-  conversationId = $state<string>()
   prompt = $state('')
 
   streamingMessages = $derived.by(() => {
@@ -29,6 +28,7 @@ export class StreamingMessagesManager {
     ]
   })
 
+  #conversationId = $state<string>()
   #existingMessages: { current: Message[] | undefined }
   #messageChunks: { current: MessageChunk[] | undefined }
   #newIncomingMessage = $derived.by(() => {
@@ -44,10 +44,10 @@ export class StreamingMessagesManager {
   })
 
   constructor(conversationId: () => string | undefined) {
-    this.conversationId = conversationId()
+    this.#conversationId = conversationId()
     this.#existingMessages = new Query(() =>
       z.current.query.messages
-        .where('conversationId', this.conversationId ?? '')
+        .where('conversationId', this.#conversationId ?? '')
         .orderBy('updatedAt', 'asc'))
 
     this.#messageChunks = new Query(() =>
@@ -56,7 +56,7 @@ export class StreamingMessagesManager {
         .orderBy('chunkIndex', 'asc'))
 
     $effect(() => {
-      this.conversationId = conversationId()
+      this.#conversationId = conversationId()
     })
   }
 
@@ -71,7 +71,7 @@ export class StreamingMessagesManager {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        conversationId: this.conversationId ?? null,
+        conversationId: this.#conversationId ?? null,
         message: this.prompt,
       }),
       credentials: 'include',
@@ -79,7 +79,7 @@ export class StreamingMessagesManager {
       .then(response => response.json())
       .then((body: ResponseBody) => {
         this.prompt = ''
-        if (!this.conversationId) {
+        if (!this.#conversationId) {
           goto(`/chat/${body.conversationId}`)
         }
       })
