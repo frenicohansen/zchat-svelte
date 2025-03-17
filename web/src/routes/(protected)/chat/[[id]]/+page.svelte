@@ -6,8 +6,8 @@
   import ScrollToBottom from '$lib/components/scroll-to-bottom.svelte'
   import Button from '$lib/components/ui/button/button.svelte'
   import { ScrollArea } from '$lib/components/ui/scroll-area'
+  import { ScrollingChatManager } from '$lib/hooks/scrolling.svelte'
   import { StreamingMessagesManager } from '$lib/hooks/streaming.svelte'
-  import { useScrollingChat } from '$lib/hooks/use-scrolling-chat.svelte'
   import { highlighter } from '$lib/shiki'
   import { miniSearch } from '$lib/utils'
   import { z } from '$lib/zero'
@@ -21,12 +21,9 @@
   const streamingManager = new StreamingMessagesManager(() => page.params.id)
 
   let sendOnEnter = $state(true)
-  let scrollContainerRef = $state<HTMLDivElement | null>(null)
   let textareaRef = $state<HTMLTextAreaElement | null>(null)
-  const scrollingChat = useScrollingChat(
-    () => page.params.id,
-    () => scrollContainerRef,
-  )
+
+  const scrollingManager = new ScrollingChatManager(() => page.params.id)
 
   $effect(() => {
     conversations.current.forEach((conversation) => {
@@ -41,14 +38,18 @@
     const isOwner = conversation?.userId === z.current.userID
     const isPublicRead = conversation?.accessLevel === 'public_read'
 
+    const id = page.params.id
     if (!isOwner && isPublicRead) {
-      goto(`/share/${page.params.id}`)
+      goto(`/share/${id}`)
     }
+  })
 
+  $effect(() => {
+    const id = page.params.id
     tick().then(() => {
       textareaRef?.focus()
-      if (page.params.id) {
-        scrollingChat.scrollToBottom()
+      if (id) {
+        scrollingManager.scrollToBottom()
       }
     })
   })
@@ -85,13 +86,13 @@
 <SidebarLayout
   conversation={conversation ?? null}
   conversations={conversations.current}
-  bind:followMessage={scrollingChat.followMessage}
+  bind:followMessage={scrollingManager.followMessage}
   bind:sendOnEnter
 >
   <div class='flex flex-col items-center h-full'>
     <ScrollArea
-      bind:refViewport={scrollContainerRef}
-      onscroll={scrollingChat.handleScroll}
+      bind:refViewport={scrollingManager.scrollContainerRef}
+      onscroll={scrollingManager.handleScroll}
       type='auto'
       orientation='vertical'
       class='size-full'
@@ -106,8 +107,8 @@
         onsubmit={streamingManager.handleSubmit}
       >
         <ScrollToBottom
-          visible={scrollingChat.showScrollButton}
-          scrollToBottom={scrollingChat.scrollToBottom}
+          visible={scrollingManager.showScrollButton}
+          scrollToBottom={scrollingManager.scrollToBottom}
         />
         <textarea
           class='bg-background placeholder:text-muted-foreground resize-none flex min-h-28 outline-none flex-grow px-3 py-4 text-base disabled:cursor-not-allowed disabled:opacity-50 md:text-sm max-h-40'
