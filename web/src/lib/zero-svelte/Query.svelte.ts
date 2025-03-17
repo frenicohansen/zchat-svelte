@@ -186,11 +186,3 @@ export class Query<
     })
   }
 }
-
-export function createQuery<
-  TSchema extends Schema,
-  TTable extends keyof TSchema['tables'] & string,
-  TReturn,
->(query: MaybeGetter<QueryDef<TSchema, TTable, TReturn>>, options?: QueryOptions) {
-  return new Query(query, options)
-}

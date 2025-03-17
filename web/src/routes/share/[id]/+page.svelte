@@ -5,9 +5,9 @@
   import * as Sidebar from '$lib/components/ui/sidebar'
   import { StreamingMessagesManager } from '$lib/hooks/streaming.svelte'
   import { z } from '$lib/zero'
-  import { createQuery } from '$lib/zero-svelte'
+  import { Query } from '$lib/zero-svelte'
 
-  const conversation = createQuery(() => z.current.query.conversations.where('id', page.params.id ?? null).one())
+  const conversation = new Query(() => z.current.query.conversations.where('id', page.params.id ?? null).one())
   const streamingManager = new StreamingMessagesManager(() => page.params.id)
 </script>
 

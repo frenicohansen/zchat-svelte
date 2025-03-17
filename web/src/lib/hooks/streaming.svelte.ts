@@ -2,7 +2,7 @@ import type { Message, MessageChunk } from '$lib/db/zero-schema'
 import { goto } from '$app/navigation'
 import { PUBLIC_BACKEND_URL } from '$env/static/public'
 import { z } from '$lib/zero'
-import { createQuery } from '$lib/zero-svelte'
+import { Query } from '$lib/zero-svelte'
 
 export class StreamingMessagesManager {
   conversationId = $state<string>()
@@ -45,12 +45,12 @@ export class StreamingMessagesManager {
 
   constructor(conversationId: () => string | undefined) {
     this.conversationId = conversationId()
-    this.#existingMessages = createQuery(() =>
+    this.#existingMessages = new Query(() =>
       z.current.query.messages
         .where('conversationId', this.conversationId ?? '')
         .orderBy('updatedAt', 'asc'))
 
-    this.#messageChunks = createQuery(() =>
+    this.#messageChunks = new Query(() =>
       z.current.query.messageChunks
         .where('messageId', this.#newIncomingMessage?.id ?? -1)
         .orderBy('chunkIndex', 'asc'))
