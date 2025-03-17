@@ -8,15 +8,7 @@ export class ScrollingChatManager {
   #streamingManager: StreamingMessagesManager
   #isScrollingUp = $state(false)
   #lastScrollTop = $state(0)
-
-  #isBottom = $derived.by(() => {
-    const _top = this.#lastScrollTop
-    if (!this.scrollContainerRef)
-      return true
-
-    const threshold = 100
-    return this.scrollContainerRef.scrollHeight - this.scrollContainerRef.scrollTop - this.scrollContainerRef.clientHeight < threshold
-  })
+  #isBottom = $state(true)
 
   #lastMessage = $derived.by(() => {
     const messages = this.#streamingManager.streamingMessages
@@ -29,6 +21,21 @@ export class ScrollingChatManager {
     $effect(() => {
       const _id = conversationId()
       this.#resetState()
+    })
+
+    $effect(() => {
+      const _top = this.#lastScrollTop
+      tick().then(() => {
+        if (!this.scrollContainerRef) {
+          this.#isBottom = true
+          return
+        }
+
+        const threshold = 100
+        const nearBottom = this.scrollContainerRef.scrollHeight - this.scrollContainerRef.scrollTop - this.scrollContainerRef.clientHeight < threshold
+
+        this.#isBottom = nearBottom
+      })
     })
 
     $effect(() => {
@@ -49,6 +56,7 @@ export class ScrollingChatManager {
   }
 
   #resetState() {
+    this.#isBottom = true
     this.#isScrollingUp = false
     this.#lastScrollTop = 0
   }
