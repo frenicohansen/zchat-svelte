@@ -9,7 +9,7 @@
   import { Query } from '$lib/zero-svelte'
   import { onDestroy } from 'svelte'
 
-  const conversation = new Query(() => z.current.query.conversations.where('id', page.params.id ?? null).one())
+  const conversation = new Query(() => z.current.query.conversations.where('id', page.params.id).one())
   const streamingManager = new StreamingMessagesManager(() => page.params.id)
 
   onDestroy(() => {
