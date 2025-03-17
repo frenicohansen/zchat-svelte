@@ -21,7 +21,7 @@ async function initHighlighter() {
     _highlighter = await createHighlighterCore({
       langs: [],
       themes: [
-        import('@shikijs/themes/github-dark'),
+        import('@shikijs/themes/slack-dark'),
       ],
       engine: createJavaScriptRegexEngine(),
     })
