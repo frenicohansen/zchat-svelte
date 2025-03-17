@@ -5,7 +5,7 @@
   import { toast } from 'svelte-sonner'
 
   // eslint-disable-next-line prefer-const
-  let { lang, text }: { lang: string, text: string } = $props()
+  let { lang = 'text', text = '' }: { lang?: string, text?: string } = $props()
 
   let tokenResult = $state<TokensResult | null>(null)
 
