@@ -42,7 +42,7 @@
 
 <div class='relative mt-2 flex w-full flex-col'>
   <div
-    class='flex w-full items-center justify-between rounded-t bg-neutral-800 px-4 py-2 text-sm text-neutral-300'
+    class='flex w-full items-center justify-between rounded-t bg-neutral-800 px-4 py-2 text-sm text-neutral-300 select-none'
   >
     <span class='font-mono'>{lang.length ? lang : 'text'}</span>
     <button
