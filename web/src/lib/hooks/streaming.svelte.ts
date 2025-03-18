@@ -6,6 +6,7 @@ import { Query } from '$lib/zero-svelte'
 
 export class StreamingMessagesManager {
   prompt = $state('')
+
   streamingMessages = $derived.by(() => {
     const messages = this.#existingMessages.current
     const chunks = this.#messageChunks.current
@@ -30,7 +31,7 @@ export class StreamingMessagesManager {
 
   isStreaming = $derived.by(() => {
     const last = this.streamingMessages[this.streamingMessages.length - 1]
-    return !last?.isFinal
+    return last ? !last.isFinal : false
   })
 
   #conversationId = $state<string>()
