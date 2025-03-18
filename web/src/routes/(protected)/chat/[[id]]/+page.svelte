@@ -63,7 +63,7 @@
     const isModifierKey = e.metaKey || e.ctrlKey
     const hasNewline = streamingManager.prompt.includes('\n')
 
-    if (!isEnterKey)
+    if (!isEnterKey || streamingManager.isStreaming)
       return
 
     if (sendOnEnter && !e.shiftKey && (!hasNewline || isModifierKey)) {
