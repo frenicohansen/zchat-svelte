@@ -1,7 +1,8 @@
 import { Hono } from "hono";
 import { cors } from "hono/cors";
 import { auth } from "./lib/auth";
-import chat from "./chat";
+import { rateLimiter } from "hono-rate-limiter";
+import api from "./api";
 
 const app = new Hono<{
 	Variables: {
@@ -9,6 +10,17 @@ const app = new Hono<{
 		session: typeof auth.$Infer.Session.session | null;
 	};
 }>();
+
+app.use(
+  rateLimiter({
+    windowMs: 5 * 60 * 1000, // 5 minutes
+    limit: 100, // Limit each IP to 100 requests per `window` (here, per 5 minutes).
+    keyGenerator: async (c) =>  {
+			const session = await auth.api.getSession({ headers: c.req.raw.headers });
+			return session?.session.ipAddress ?? c.req.header("x-forwarded-for") ?? ""
+		}
+  })
+);
 
 app.use("*", async (c, next) => {
 	const session = await auth.api.getSession({ headers: c.req.raw.headers });
@@ -51,6 +63,6 @@ app.get("/health", (c) => {
 	});
 });
 
-app.route("/chat", chat);
+app.route("/api", api);
 
 export default app;

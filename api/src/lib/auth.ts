@@ -25,8 +25,8 @@ export const auth = betterAuth({
 		cookiePrefix: "zchat",
 		crossSubDomainCookies: {
 			enabled: true,
-			domain: process.env.PUBLIC_FRONTEND_URL 
-				? `.${new URL(process.env.PUBLIC_FRONTEND_URL).hostname.split('.').slice(-2).join('.')}`
+			domain: process.env.PUBLIC_FRONTEND_URL
+				? `.${new URL(process.env.PUBLIC_FRONTEND_URL).hostname.split(".").slice(-2).join(".")}`
 				: undefined,
 		},
 	},

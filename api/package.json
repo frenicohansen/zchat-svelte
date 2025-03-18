@@ -10,6 +10,7 @@
 		"db-schema": "workspace:*",
 		"drizzle-orm": "^0.40.0",
 		"hono": "^4.7.2",
+		"hono-rate-limiter": "^0.4.2",
 		"pg": "^8.13.3"
 	},
 	"devDependencies": {

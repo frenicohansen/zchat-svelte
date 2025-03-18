@@ -6,15 +6,15 @@ import { Query } from '$lib/zero-svelte'
 
 export class StreamingMessagesManager {
   prompt = $state('')
-
   streamingMessages = $derived.by(() => {
     const messages = this.#existingMessages.current
     const chunks = this.#messageChunks.current
     const newIncomingMessage = this.#newIncomingMessage
-    if (!messages || !messages.length) {
+
+    if (!messages?.length) {
       return []
     }
-    else if (!newIncomingMessage || !chunks || !chunks.length) {
+    else if (!newIncomingMessage || !chunks?.length) {
       return messages
     }
 
@@ -26,6 +26,11 @@ export class StreamingMessagesManager {
       ...messages.filter(msg => msg.id !== newIncomingMessage.id),
       { ...newIncomingMessage, finalText: joinedChunks },
     ]
+  })
+
+  isStreaming = $derived.by(() => {
+    const last = this.streamingMessages[this.streamingMessages.length - 1]
+    return !last?.isFinal
   })
 
   #conversationId = $state<string>()
@@ -65,7 +70,7 @@ export class StreamingMessagesManager {
       return
 
     const backendUrl = PUBLIC_BACKEND_URL.replace(/\/$/, '')
-    fetch(`${backendUrl}/chat`, {
+    fetch(`${backendUrl}/api/chat`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -83,6 +88,20 @@ export class StreamingMessagesManager {
           goto(`/chat/${body.conversationId}`)
         }
       })
+  }
+
+  handleStop = () => {
+    const backendUrl = PUBLIC_BACKEND_URL.replace(/\/$/, '')
+    fetch(`${backendUrl}/api/stop`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        messageId: this.#newIncomingMessage?.id,
+      }),
+      credentials: 'include',
+    })
   }
 }
 

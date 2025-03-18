@@ -12,7 +12,7 @@
   import { miniSearch } from '$lib/utils'
   import { z } from '$lib/zero'
   import { Query } from '$lib/zero-svelte'
-  import SendHorizontal from 'lucide-svelte/icons/send-horizontal'
+  import { SendHorizontal, Square } from 'lucide-svelte'
   import { onDestroy, tick } from 'svelte'
 
   const conversations = new Query(z.current.query.conversations.where('userId', z.current.userID).orderBy('updatedAt', 'desc').related('messages'))
@@ -117,9 +117,15 @@
           bind:this={textareaRef}
           onkeydown={handleTextareaKeydown}
         ></textarea>
-        <Button class='my-2.5' variant='default' size='icon' type='submit'>
-          <SendHorizontal class='w-4 h-4' />
-        </Button>
+        {#if streamingManager.isStreaming}
+          <Button class='my-2.5' variant='default' size='icon' onclick={streamingManager.handleStop}>
+            <Square class='w-4 h-4' />
+          </Button>
+        {:else}
+          <Button class='my-2.5' variant='default' size='icon' type='submit'>
+            <SendHorizontal class='w-4 h-4' />
+          </Button>
+        {/if}
       </form>
     </div>
   </div>
