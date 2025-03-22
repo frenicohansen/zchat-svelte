@@ -1,13 +1,14 @@
 import type { Message, MessageChunk } from '$lib/db/zero-schema'
+import type { MaybeGetter } from '$lib/utils'
 import { goto } from '$app/navigation'
 import { PUBLIC_BACKEND_URL } from '$env/static/public'
+import { toValue } from '$lib/utils'
 import { z } from '$lib/zero'
 import { Query } from '$lib/zero-svelte'
 
 export class StreamingMessagesManager {
   prompt = $state('')
-
-  streamingMessages = $derived.by(() => {
+  readonly streamingMessages = $derived.by(() => {
     const messages = this.#existingMessages.current
     const chunks = this.#messageChunks.current
     const newIncomingMessage = this.#newIncomingMessage
@@ -29,15 +30,17 @@ export class StreamingMessagesManager {
     ]
   })
 
-  isStreaming = $derived.by(() => {
+  readonly isStreaming = $derived.by(() => {
     const last = this.streamingMessages[this.streamingMessages.length - 1]
     return last ? !last.isFinal : false
   })
 
-  #conversationId = $state<string>()
+  #conversationIdGetter = $state<MaybeGetter<string>>()
   #existingMessages: { current: Message[] | undefined }
+
   #messageChunks: { current: MessageChunk[] | undefined }
-  #newIncomingMessage = $derived.by(() => {
+  readonly #conversationId = $derived.by(() => toValue(this.#conversationIdGetter))
+  readonly #newIncomingMessage = $derived.by(() => {
     const messages = this.#existingMessages.current
     if (!messages || !messages.length) {
       return null
@@ -50,7 +53,7 @@ export class StreamingMessagesManager {
   })
 
   constructor(conversationId: () => string | undefined) {
-    this.#conversationId = conversationId()
+    this.#conversationIdGetter = conversationId()
     this.#existingMessages = new Query(() =>
       z.current.query.messages
         .where('conversationId', this.#conversationId ?? '')
@@ -60,10 +63,6 @@ export class StreamingMessagesManager {
       z.current.query.messageChunks
         .where('messageId', this.#newIncomingMessage?.id ?? -1)
         .orderBy('chunkIndex', 'asc'))
-
-    $effect(() => {
-      this.#conversationId = conversationId()
-    })
   }
 
   handleSubmit = () => {

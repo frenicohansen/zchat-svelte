@@ -10,7 +10,7 @@ export class ScrollingChatManager {
   #lastScrollTop = $state(0)
   #isBottom = $state(true)
 
-  #lastMessage = $derived.by(() => {
+  readonly #lastMessage = $derived.by(() => {
     const messages = this.#streamingManager.streamingMessages
     return messages.length > 0 ? messages[messages.length - 1] : null
   })

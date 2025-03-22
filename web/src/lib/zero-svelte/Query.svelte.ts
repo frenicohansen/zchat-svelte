@@ -1,3 +1,4 @@
+import type { MaybeGetter } from '$lib/utils'
 import type {
   Query as QueryDef,
   ReadonlyJSONValue,
@@ -8,6 +9,7 @@ import type {
 import type { AdvancedQuery, HumanReadable } from '@rocicorp/zero/advanced'
 import type { Immutable } from './types'
 import type { Z } from './Z.svelte'
+import { toValue } from '$lib/utils'
 import { getContext } from 'svelte'
 import { createSubscriber } from 'svelte/reactivity'
 import { deepClone } from './deep-clone'
@@ -28,13 +30,6 @@ const defaultSnapshots = {
 
 function getDefaultSnapshot<TReturn>(singular: boolean): QueryResult<TReturn> {
   return (singular ? defaultSnapshots.singular : defaultSnapshots.plural) as QueryResult<TReturn>
-}
-
-type Getter<T> = () => T
-type MaybeGetter<T> = T | Getter<T>
-
-function toValue<T>(value: MaybeGetter<T>): T {
-  return typeof value === 'function' ? (value as Getter<T>)() : value
 }
 
 class ViewWrapper<
@@ -166,12 +161,15 @@ export class Query<
 > {
   current = $state<HumanReadable<TReturn>>(null!)
   details = $state<QueryResultDetails>(null!)
-  #query_impl: AdvancedQuery<TSchema, TTable, TReturn>
+  #query: MaybeGetter<QueryDef<TSchema, TTable, TReturn>>
+  readonly #query_impl = $derived.by(() =>
+    toValue(this.#query) as AdvancedQuery<TSchema, TTable, TReturn>,
+  )
 
   constructor(query: MaybeGetter<QueryDef<TSchema, TTable, TReturn>>, options?: QueryOptions) {
     const z = getContext('z') as Z<Schema>
     const id = z?.current?.userID ? z?.current.userID : 'anon'
-    this.#query_impl = toValue(query) as AdvancedQuery<TSchema, TTable, TReturn>
+    this.#query = query
     const default_snapshot = getDefaultSnapshot(this.#query_impl.format.singular)
     this.current = default_snapshot[0] as HumanReadable<TReturn>
     this.details = default_snapshot[1]
@@ -179,7 +177,6 @@ export class Query<
     const enabled = options?.enabled ?? true
     const ttl = options?.ttl ?? 'none'
     $effect(() => {
-      this.#query_impl = toValue(query) as AdvancedQuery<TSchema, TTable, TReturn>
       const view = viewStore.getView(id, this.#query_impl, enabled, ttl)
       this.current = view.current[0]
       this.details = view.current[1]
