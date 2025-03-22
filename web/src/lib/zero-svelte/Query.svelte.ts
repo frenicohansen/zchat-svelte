@@ -161,15 +161,12 @@ export class Query<
 > {
   current = $state<HumanReadable<TReturn>>(null!)
   details = $state<QueryResultDetails>(null!)
-  #query: MaybeGetter<QueryDef<TSchema, TTable, TReturn>>
-  readonly #query_impl = $derived.by(() =>
-    toValue(this.#query) as AdvancedQuery<TSchema, TTable, TReturn>,
-  )
+  #query_impl: AdvancedQuery<TSchema, TTable, TReturn>
 
   constructor(query: MaybeGetter<QueryDef<TSchema, TTable, TReturn>>, options?: QueryOptions) {
     const z = getContext('z') as Z<Schema>
     const id = z?.current?.userID ? z?.current.userID : 'anon'
-    this.#query = query
+    this.#query_impl = toValue(query) as AdvancedQuery<TSchema, TTable, TReturn>
     const default_snapshot = getDefaultSnapshot(this.#query_impl.format.singular)
     this.current = default_snapshot[0] as HumanReadable<TReturn>
     this.details = default_snapshot[1]
@@ -177,6 +174,7 @@ export class Query<
     const enabled = options?.enabled ?? true
     const ttl = options?.ttl ?? 'none'
     $effect(() => {
+      this.#query_impl = toValue(query) as AdvancedQuery<TSchema, TTable, TReturn>
       const view = viewStore.getView(id, this.#query_impl, enabled, ttl)
       this.current = view.current[0]
       this.details = view.current[1]
