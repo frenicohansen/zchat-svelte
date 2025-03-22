@@ -4,14 +4,14 @@
 		"dev": "bun run --hot src/index.ts"
 	},
 	"dependencies": {
-		"@openrouter/ai-sdk-provider": "^0.4.2",
-		"ai": "^4.1.47",
-		"better-auth": "^1.2.0",
+		"@openrouter/ai-sdk-provider": "^0.4.3",
+		"ai": "^4.2.0",
+		"better-auth": "^1.2.4",
 		"db-schema": "workspace:*",
-		"drizzle-orm": "^0.40.0",
-		"hono": "^4.7.2",
+		"drizzle-orm": "^0.40.1",
+		"hono": "^4.7.5",
 		"hono-rate-limiter": "^0.4.2",
-		"pg": "^8.13.3"
+		"pg": "^8.14.1"
 	},
 	"devDependencies": {
 		"@types/bun": "latest",
