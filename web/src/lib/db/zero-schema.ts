@@ -4,7 +4,6 @@ import * as drizzleSchema from 'db-schema'
 import { createZeroSchema } from 'drizzle-zero'
 
 export const schema = createZeroSchema(drizzleSchema, {
-  version: 1,
   casing: 'snake_case',
   tables: {
     conversations: {
